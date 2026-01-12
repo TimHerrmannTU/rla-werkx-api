@@ -21,10 +21,10 @@ class EmployeeService:
     def get_by_id(self, emp_id: str):
         return self.db.query(Employee).filter(Employee.id == emp_id).first()
     
-    def get_dictionary(self, active_only: bool = True):
+    def get_id_map(self, active_only: bool = True):
         """
         Useful for dropdowns. Replaces get_mitarbeiter_kv.
         Returns { "AeMe": "Max Mustermann", ... }
         """
         employees = self.get_all(active_only)
-        return {emp.id: emp.name for emp in employees}
+        return {emp.name: emp.id for emp in employees}
