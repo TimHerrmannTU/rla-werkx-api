@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from routers import project
+
 # Initialize the App
 app = FastAPI(title="WerkX API")
 
@@ -13,12 +15,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. Hello World Endpoint
+app.include_router(project.router) 
+
+# TEST ENDPOINTS
 @app.get("/api/hello")
 def read_root():
     return {"message": "Hello World from FastAPI", "status": "online"}
-
-# 2. Example with Path Parameter (like /api/user/123)
 @app.get("/api/hello/{name}")
 def read_item(name: str):
     return {"message": f"Hello, {name}!"}

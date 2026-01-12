@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from config import SQLALCHEMY_DATABASE_URL
 
 # Update with your credentials
 # URL format: mysql+mysqlconnector://USER:PASSWORD@HOST/DB_NAME
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:password@localhost/werkx_db"
+
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, 
