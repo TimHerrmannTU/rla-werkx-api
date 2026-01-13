@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Float, Column, Integer, String, Boolean
 from database import Base
 
 class Project(Base):
@@ -9,5 +9,5 @@ class Project(Base):
     name_short  = Column("name", String(255))
     name_long   = Column("voller_name", String(255))
     parent_id   = Column("projekt", String(50)) # link to 'ProjektGruppe'
-    hour_limit  = Column("stundenlimit", Integer)
-    phase       = Column("leistungsphase", Integer)
+    hour_limit  = Column("stundenlimit", Float)
+    phase       = Column("leistungsphase", String(100))
