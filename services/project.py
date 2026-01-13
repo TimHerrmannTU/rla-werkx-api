@@ -49,7 +49,6 @@ class ProjectService:
             stat = phase_stats[phase.id]
             phase.total_hours = round(stat["total"], 2)
             phase.hours_per_emp = {k: round(v, 2) for k, v in stat["emps"].items()}
-            phase.hours_per_emp = dict(stat["emps"])
 
         pro.total_hours = round(pro.total_hours, 2)
         pro.hours_per_emp = dict(pro.hours_per_emp)
