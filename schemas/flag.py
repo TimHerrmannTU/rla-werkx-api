@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class FlagSchema(BaseModel):
+class FlagBase(BaseModel):
     id: int
     parent_id: str
     desc: Optional[str] = None

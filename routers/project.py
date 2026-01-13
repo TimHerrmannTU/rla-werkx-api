@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from models.project import Project
-from schemas.project import ProjectSummary, ProjectDetail
+from schemas.project import ProjectBase, ProjectDetail
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/projects", tags=["Projects"])
 # LIST ENDPOINTS
 # --------------------------
 
-@router.get("/", response_model=list[ProjectSummary])
+@router.get("/", response_model=list[ProjectBase])
 def get_projects_short(db: Session = Depends(get_db)):
     """Default: Returns essential data only."""
     return db.query(Project).order_by(Project.id).all()
@@ -25,7 +25,7 @@ def get_projects_long(db: Session = Depends(get_db)):
 # SINGLE ENDPOINTS
 # --------------------------
 
-@router.get("/{project_id}", response_model=ProjectSummary)
+@router.get("/{project_id}", response_model=ProjectBase)
 def get_project_short(project_id: str, db: Session = Depends(get_db)):
     """Default: Single project essential data."""
     pro = db.query(Project).filter(Project.id == project_id).first()

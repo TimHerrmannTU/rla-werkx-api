@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
-from schemas.flag import FlagSchema
-from schemas.phase import PhaseSchema
+from schemas.flag import FlagBase
+from schemas.phase import PhaseBase
 
 class ProjectBase(BaseModel):
     id: str
@@ -13,9 +13,6 @@ class ProjectBase(BaseModel):
         from_attributes = True
         populate_by_name = True
 
-class ProjectSummary(ProjectBase):
-    pass
-
 class ProjectDetail(ProjectBase):
-    phases: List[PhaseSchema] = []
-    flags: List[FlagSchema] = []
+    phases: List[PhaseBase] = []
+    flags: List[FlagBase] = []

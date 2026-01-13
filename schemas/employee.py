@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from utils.validators import LegacyDate
 
-class EmployeeSchema(BaseModel):
+class EmployeeBase(BaseModel):
     id: str
     name: str
     target_hours: Optional[float] = None

@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Dict, Optional
 
-class PhaseSchema(BaseModel):
+class PhaseBase(BaseModel):
     id: str
     parent_id: str
     name: str
@@ -11,3 +11,7 @@ class PhaseSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PhaseDetailed(PhaseBase):
+    total_hours: float = 0.0
+    hours_per_emp: Dict[str, float] = {}
