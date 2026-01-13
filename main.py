@@ -1,17 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-import models.project
-import models.flag 
-import models.phase
+from models import (
+    employee,
+    project,
+    flag ,
+    phase
+)
 
-from routers import project
-from routers import employee
+from routers import (
+    project,
+    employee
+)
 
 # Initialize the App
 app = FastAPI(title="WerkX API")
-
-# Configure CORS (Allows your PHP/Frontend to talk to this API if on different ports)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # For dev only. In prod, set to specific domain.
@@ -21,11 +24,4 @@ app.add_middleware(
 )
 
 app.include_router(project.router) 
-
-# TEST ENDPOINTS
-@app.get("/api/hello")
-def read_root():
-    return {"message": "Hello World from FastAPI", "status": "online"}
-@app.get("/api/hello/{name}")
-def read_item(name: str):
-    return {"message": f"Hello, {name}!"}
+app.include_router(employee.router)

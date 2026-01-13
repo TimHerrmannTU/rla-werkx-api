@@ -33,7 +33,7 @@ def get_project_summary(project_id: str, db: Session = Depends(get_db)):
     return pro
 
 @router.get("/{project_id}/detailed", response_model=ProjectDetail)
-def get_project_summary(project_id: str, db: Session = Depends(get_db)):
+def get_project_detailed(project_id: str, db: Session = Depends(get_db)):
     """Default: Single project essential data."""
     pro = db.query(Project).filter(Project.id == project_id).first()
     if not pro: raise HTTPException(404, "Project not found")
