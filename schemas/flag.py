@@ -3,7 +3,7 @@ from typing import Optional
 
 class FlagSchema(BaseModel):
     id: int
-    desc: str
+    desc: Optional[str] = None
     phase: Optional[str] = None
     partial: Optional[str] = None
     color: Optional[str] = None

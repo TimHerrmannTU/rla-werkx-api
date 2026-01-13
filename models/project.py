@@ -9,7 +9,12 @@ class Project(Base):
     id        = Column("kuerzel", String(50), primary_key=True) 
     desc      = Column("voller_name", String(255))
     parent_id = Column("parent", String(50))
-    # phases    = relationship("Flag", back_populates="project") # replace with phase
+    phases = relationship(
+        "Phase", 
+        back_populates="project",
+        primaryjoin="foreign(Phase.parent_id) == remote(Project.id)",
+        lazy="select" 
+    )
     flags = relationship(
         "Flag", 
         back_populates="project",
