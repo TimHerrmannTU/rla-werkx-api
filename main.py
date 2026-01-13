@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import models.project
-import models.flag 
 
 from routers import project
 from routers import employee

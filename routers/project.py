@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from models.project import Project
-from schemas.project import ProjectSummary, ProjectDetail
+from schemas.project import ProjectSummary
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
@@ -15,12 +15,6 @@ def get_projects_summary(db: Session = Depends(get_db)):
     """Default: Returns essential data only."""
     return db.query(Project).order_by(Project.id).all()
 
-@router.get("/detailed", response_model=list[ProjectDetail])
-def get_projects_detailed(db: Session = Depends(get_db)):
-    """Detailed: Returns everything + flags."""
-    # Eager load flags to prevent N+1 query performance issues
-    return db.query(Project).options(joinedload(Project.flags)).order_by(Project.id).all()
-
 # --------------------------
 # SINGLE ENDPOINTS
 # --------------------------
@@ -29,12 +23,5 @@ def get_projects_detailed(db: Session = Depends(get_db)):
 def get_project_summary(project_id: str, db: Session = Depends(get_db)):
     """Default: Single project essential data."""
     proj = db.query(Project).filter(Project.id == project_id).first()
-    if not proj: raise HTTPException(404, "Project not found")
-    return proj
-
-@router.get("/{project_id}/detailed", response_model=ProjectDetail)
-def get_project_detailed(project_id: str, db: Session = Depends(get_db)):
-    """Detailed: Single project with flags."""
-    proj = db.query(Project).options(joinedload(Project.flags)).filter(Project.id == project_id).first()
     if not proj: raise HTTPException(404, "Project not found")
     return proj

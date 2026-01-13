@@ -20,10 +20,10 @@ class Flag(Base):
     name = Column("name", String(255))
     phase = Column("phase", String(50))
     color = Column("farbe", String(50))
-    time_budget = Column("budget", Float) # Legacy name is 'budget', NOT 'zeitbudget'
+    time_budget = Column("budget", Float)
     
-    linked_partial = Column("kopplung_to", String(255)) # 'kopplung_to'
-    linked_service = Column("kopplung_weitere_leistung", String(255)) # 'kopplung_weitere_leistung'
+    linked_partial = Column("kopplung_to", String(255))
+    linked_service = Column("kopplung_weitere_leistung", String(255))
 
     # Calculated Field: (SELECT SUM(zeit) FROM stundeneigenschaften WHERE tag = id)
     time_total = column_property(
