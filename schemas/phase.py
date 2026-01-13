@@ -12,6 +12,6 @@ class PhaseBase(BaseModel):
     class Config:
         from_attributes = True
 
-class PhaseDetailed(PhaseBase):
+class PhaseDetail(PhaseBase):
     total_hours: float = 0.0
     hours_per_emp: Dict[str, float] = {}

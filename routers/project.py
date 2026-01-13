@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from models.project import Project
-from schemas.project import ProjectBase, ProjectDetail
+from schemas.project import ProjectBase, ProjectDetail, ProjectHours
+from services.project import ProjectService
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
@@ -37,4 +38,13 @@ def get_project_long(project_id: str, db: Session = Depends(get_db)):
     """Default: Single project essential data."""
     pro = db.query(Project).filter(Project.id == project_id).first()
     if not pro: raise HTTPException(404, "Project not found")
+    return pro
+
+@router.get("/{project_id}/statistic", response_model=ProjectHours)
+def get_project_statistic(project_id: str, db: Session = Depends(get_db)):
+    """Detailed: Returns project + phases + aggregated statistics."""
+    service = ProjectService(db)
+    pro = service.get_project_hours(project_id)
+    if not pro: # gate
+        raise HTTPException(status_code=404, detail="Project not found")
     return pro
