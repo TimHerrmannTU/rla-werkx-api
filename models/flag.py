@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, select, func
+from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -16,7 +16,8 @@ class Flag(Base):
     linked_service = Column("kopplung_weitere_leistung", String(100))
 
     project = relationship(
-        "Project", 
+        "Project",
         back_populates="flags",
-        primaryjoin="foreign(Flag.parent_id) == remote(Project.id)"
+        primaryjoin="Flag.parent_id == Project.id",
+        foreign_keys="[Flag.parent_id]" # Mark this column as the foreign key
     )

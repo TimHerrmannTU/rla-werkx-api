@@ -18,7 +18,6 @@ def get_projects_summary(db: Session = Depends(get_db)):
 @router.get("/detailed", response_model=list[ProjectDetail])
 def get_projects_detailed(db: Session = Depends(get_db)):
     """Detailed: Returns everything + flags."""
-    # Eager load flags to prevent N+1 query performance issues
     return db.query(Project).options(joinedload(Project.flags)).order_by(Project.id).all()
 
 
@@ -29,6 +28,13 @@ def get_projects_detailed(db: Session = Depends(get_db)):
 @router.get("/{project_id}", response_model=ProjectSummary)
 def get_project_summary(project_id: str, db: Session = Depends(get_db)):
     """Default: Single project essential data."""
-    proj = db.query(Project).filter(Project.id == project_id).first()
-    if not proj: raise HTTPException(404, "Project not found")
-    return proj
+    pro = db.query(Project).filter(Project.id == project_id).first()
+    if not pro: raise HTTPException(404, "Project not found")
+    return pro
+
+@router.get("/{project_id}/detailed", response_model=ProjectDetail)
+def get_project_summary(project_id: str, db: Session = Depends(get_db)):
+    """Default: Single project essential data."""
+    pro = db.query(Project).filter(Project.id == project_id).first()
+    if not pro: raise HTTPException(404, "Project not found")
+    return pro

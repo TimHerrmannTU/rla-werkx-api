@@ -9,15 +9,19 @@ class Project(Base):
     id        = Column("kuerzel", String(50), primary_key=True) 
     desc      = Column("voller_name", String(255))
     parent_id = Column("parent", String(50))
-    phases = relationship(
-        "Phase", 
-        back_populates="project",
-        primaryjoin="foreign(Phase.parent_id) == remote(Project.id)",
-        lazy="select" 
-    )
+
     flags = relationship(
-        "Flag", 
+        "Flag",
         back_populates="project",
-        primaryjoin="foreign(Flag.parent_id) == remote(Project.id)",
-        lazy="select" 
+        primaryjoin="Flag.parent_id == Project.id",
+        foreign_keys="Flag.parent_id",
+        lazy="select"
+    )
+
+    phases = relationship(
+        "Phase",
+        back_populates="project",
+        primaryjoin="Phase.parent_id == Project.id",
+        foreign_keys="Phase.parent_id",
+        lazy="select"
     )
