@@ -1,4 +1,5 @@
 from sqlalchemy import Float, Column, Integer, String, Boolean
+from sqlalchemy.orm import relationship
 from database import Base
 
 class Project(Base):
@@ -11,3 +12,4 @@ class Project(Base):
     parent_id   = Column("projekt", String(50)) # link to 'ProjektGruppe'
     hour_limit  = Column("stundenlimit", Float)
     phase       = Column("leistungsphase", String(100))
+    flags       = relationship("Flag", back_populates="project")

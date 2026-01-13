@@ -1,5 +1,6 @@
-from pydantic import BaseModel, BeforeValidator
-from typing import Optional, Annotated
+from pydantic import BaseModel, Field, BeforeValidator
+from typing import Optional, Annotated, Union, List
+from schemas.flag import FlagSchema
 
 def clean_int(v):
     if v is None: return None # gate
@@ -10,14 +11,19 @@ def clean_int(v):
 
 SafeInt = Annotated[Optional[int], BeforeValidator(clean_int)]
 
-class ProjectSchema(BaseModel):
-    # JSON field name : Python type = fallback
-    id:          str
-    name_short:  str
-    name_long:   Optional[str] = None
-    parent_id:   Optional[str] = None
-    hour_limit:  Optional[float] = None
-    phase:       SafeInt = None
+class ProjectBase(BaseModel):
+    id: str
+    parent_id: Optional[str] = None
+    name_long: Optional[str] = Field(default=None, alias="full_name") 
+    phase: SafeInt = None
+    color: Optional[str] = None 
 
     class Config:
-        from_attributes = True  
+        from_attributes = True
+        populate_by_name = True
+
+class ProjectSummary(ProjectBase):
+    pass
+
+class ProjectDetail(ProjectBase):
+    flags: List[FlagSchema] = []

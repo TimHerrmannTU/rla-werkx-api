@@ -1,24 +1,40 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from models.project import Project
-from schemas.project import ProjectSchema
+from schemas.project import ProjectSummary, ProjectDetail
 
-# Prefix sets the URL structure to /api/project
-router = APIRouter(prefix="/api/project", tags=["Project"])
+router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
-@router.get("/{kuerzel}", response_model=ProjectSchema)
-def get_single_project(kuerzel: str, db: Session = Depends(get_db)):
-    
-    project = db.query(Project).filter(Project.id == kuerzel).first()
-    
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-        
-    return project
+# --------------------------
+# LIST ENDPOINTS
+# --------------------------
 
-@router.get("/", response_model=list[ProjectSchema])
-def get_all_projects(db: Session = Depends(get_db)):
-    # Fetch all projects, ordered by ID
-    projects = db.query(Project).order_by(Project.id).all()
-    return projects
+@router.get("/", response_model=list[ProjectSummary])
+def get_projects_summary(db: Session = Depends(get_db)):
+    """Default: Returns essential data only."""
+    return db.query(Project).order_by(Project.id).all()
+
+@router.get("/detailed", response_model=list[ProjectDetail])
+def get_projects_detailed(db: Session = Depends(get_db)):
+    """Detailed: Returns everything + flags."""
+    # Eager load flags to prevent N+1 query performance issues
+    return db.query(Project).options(joinedload(Project.flags)).order_by(Project.id).all()
+
+# --------------------------
+# SINGLE ENDPOINTS
+# --------------------------
+
+@router.get("/{project_id}", response_model=ProjectSummary)
+def get_project_summary(project_id: str, db: Session = Depends(get_db)):
+    """Default: Single project essential data."""
+    proj = db.query(Project).filter(Project.id == project_id).first()
+    if not proj: raise HTTPException(404, "Project not found")
+    return proj
+
+@router.get("/{project_id}/detailed", response_model=ProjectDetail)
+def get_project_detailed(project_id: str, db: Session = Depends(get_db)):
+    """Detailed: Single project with flags."""
+    proj = db.query(Project).options(joinedload(Project.flags)).filter(Project.id == project_id).first()
+    if not proj: raise HTTPException(404, "Project not found")
+    return proj
