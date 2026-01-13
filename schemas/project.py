@@ -14,3 +14,6 @@ class ProjectBase(BaseModel):
 
 class ProjectSummary(ProjectBase):
     pass
+
+class ProjectDetail(ProjectBase):
+    flags: List[FlagSchema] = []

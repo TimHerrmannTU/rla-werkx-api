@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from models.project import Project
-from schemas.project import ProjectSummary
+from schemas.project import ProjectSummary, ProjectDetail
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
@@ -14,6 +14,13 @@ router = APIRouter(prefix="/api/projects", tags=["Projects"])
 def get_projects_summary(db: Session = Depends(get_db)):
     """Default: Returns essential data only."""
     return db.query(Project).order_by(Project.id).all()
+
+@router.get("/detailed", response_model=list[ProjectDetail])
+def get_projects_detailed(db: Session = Depends(get_db)):
+    """Detailed: Returns everything + flags."""
+    # Eager load flags to prevent N+1 query performance issues
+    return db.query(Project).options(joinedload(Project.flags)).order_by(Project.id).all()
+
 
 # --------------------------
 # SINGLE ENDPOINTS
