@@ -12,10 +12,10 @@ class Employee(Base):
     total_hours =  Column("gesamtstunden", Float)
     
     # Dates
-    entry_date     = Column("eintritt", Date)
-    exit_date      = Column("austritt", Date, nullable=True)
-    birth_date     = Column("geburtsdatum", Date)
-    first_job_date = Column("erste_berufsttgkt", Date)
+    entry_date     = Column("eintritt", String(20))
+    exit_date      = Column("austritt", String(20))
+    birth_date     = Column("geburtsdatum", String(20))
+    first_job_date = Column("erste_berufsttgkt", String(20))
     
     # Status
     is_active = Column("aktiv", Boolean, default=True)
