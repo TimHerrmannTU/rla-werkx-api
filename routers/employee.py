@@ -23,3 +23,8 @@ def get_employee_short(emp_id: str, db: Session = Depends(get_db)):
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
     if not emp: raise HTTPException(404, "Employee not found")
     return emp
+
+@router.get("/{emp_id}/{YYYY}/{MM}")
+def get_employee_month(emp_id: str, YYYY: int, MM: int, db: Session = Depends(get_db)):
+    service = EmployeeService(db)
+    return service.get_month_data(emp_id, YYYY, MM)
