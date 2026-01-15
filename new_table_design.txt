@@ -11,27 +11,36 @@ holidays (merge feiertage, sonderdefinitionen)
 id (int) | date | name | region | target_factor
 
 
-daily_entries (merge, uhrzeite (contains both work & break), fehltage, notizen (iff projekt == None), tagebuch)
-id (int) | date | employee | start_work | stop_work | start_break | stop_break | status | status_target_factor | status_note | general_note
+daily_entries (merge, fehltage, notizen (iff projekt == None), tagebuch)
+id (int) | date | employee | status | status_target_factor | status_note | general_note
+
+timeframes_work (uhrzeiten)
+id (int) | daily_entry_id | start | stop
+
+timeframe_breaks (uhrzeiten)
+id (int) | daily_entry_id | start | stop
+
 
 phase_and_flag_entries (merge arbeitszeit, stundeneigenschaften, notizen (iff projekt != None))
-id (int) | date | employee | project | time | note | target_id | target_type (PROJECT|PHASE|FLAG)
-
+id (int) | daily_entry_id | project_id | time | note | phase_id | flag_id
+0        | 20             | "ZWH"      | 10   | ""   | null     | null      => hours count for project
+0        | 20             | "ZWH"      | 10   | ""   | "ZWH_P1" | null      => hours count for specific phase 
+0        | 20             | "ZWH"      | 10   | ""   | "ZWH_P1" | "ZWH_F1"  => hours count for specific flag
 
 projects (projektgruppen)
 id (str) | name | color | active | creation_date | has_partials | has_services
 
-project_partials
-id (int) | name | project
-
-project_services
-id (int) | name | project 
-
 project_phases (projekte)
-id (str) | name | parent_project | lps
+id (str) | name | phase | project_id
 
 project_flags (stundentags)
-id (str) | name | color | project | phase | time_budget | linked_partial | linked_service
+id (str) | name | color | project_id | phase | time_budget | linked_partial | linked_service
+
+project_partials
+id (int) | name | project_id
+
+project_services
+id (int) | name | project_id
 
 
 unused, under used, redundant & backup tables
@@ -39,3 +48,5 @@ abmeldungen, bes_leistungen, betriebsorte, farben, farben_2, farben_obs,
 fehltage_251123, fehltage_planung_obs, kumulation, leistungsbilder,
 mitarbeiter_alt, projekte_team, soll_191201, soll_alt, stammdaten,
 urlaubsanspruch_251123, urlaubsanspruch_alt, zeitraume_ausfuehrung
+
+https://dbdiagram.io/d/werkx-6967ad25d6e030a024099967
