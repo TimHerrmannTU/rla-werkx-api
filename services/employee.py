@@ -1,7 +1,12 @@
+import calendar
+from datetime import date
+
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import extract
 from models.log import LogDailySummary
 from models.calendar import CalendarDay
+
+from models.employee import EmployeeHourTarget
 
 class EmployeeService:
     def __init__(self, db: Session):
@@ -27,11 +32,23 @@ class EmployeeService:
 
         log_map = {l.date: l for l in logs}
 
+        # Fetch active contract
+        start_date = date(year, month, 1)
+        end_date = date(year, month, calendar.monthrange(year, month)[1])
+        
+        contract = self.db.query(EmployeeHourTarget).filter(
+            EmployeeHourTarget.employee_id == emp_id,
+            EmployeeHourTarget.valid_start <= end_date,
+            (EmployeeHourTarget.valid_stop >= start_date) | (EmployeeHourTarget.valid_stop == None)
+        ).first()
+        
         # Merge
         payload = []
         for day in days:
             log = log_map.get(day.date)
-            
+
+            spread = contract.target_spread
+            base_target = contract.weekly_target * (spread[day.date.weekday()]/sum(spread))            
             payload.append({
                 # Date Data
                 "date": day.date,
@@ -43,6 +60,7 @@ class EmployeeService:
                 "note": log.general_note if log else None,
                 
                 # Hour Logging
+                "target_hours": base_target,
                 "total_hours": sum(p.time for p in log.project_hours) if log else 0.0,
                 "project_hours": [
                     {

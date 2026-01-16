@@ -27,7 +27,8 @@ class DailyLogSchema(BaseModel):
     status: str
     status_target_factor: float
     general_note: Optional[str] = None
-    
+
+    target_hours: float = 0.0    
     total_hours: Optional[float] = 0.0
     project_hours: List[ProjectLogSchema] = []
     timeframes_work: List[TimeframeSchema] = []
