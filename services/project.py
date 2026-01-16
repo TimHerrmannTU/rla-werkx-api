@@ -52,17 +52,20 @@ class ProjectService:
                 flag_stats[flag_id]["total"] += h
                 flag_stats[flag_id]["emps"][emp_id] += h
 
-        # Inject into Phase Objects (Monkey Patching)
-        for phase in pro.phases:
-            stat = phase_stats.get(phase.id, {"total": 0.0, "emps": {}})
-            phase.total_hours = round(stat["total"], 2)
-            phase.hours_per_emp = {k: round(v, 2) for k, v in stat["emps"].items()}
-        for flag in pro.flags:
-            stat = flag_stats.get(flag.id, {"total": 0.0, "emps": {}})
-            flag.total_hours = round(stat["total"], 2)
-            flag.hours_per_emp = {k: round(v, 2) for k, v in stat["emps"].items()}
+        inject_stats(pro.phases, phase_stats)
+        inject_stats(pro.flags, flag_stats)
 
         pro.total_hours = round(pro.total_hours, 2)
         pro.hours_per_emp = {k: round(v, 2) for k, v in pro.hours_per_emp.items()}
 
         return pro
+    
+####################
+# helper functions #
+####################
+def inject_stats(items, stats_map):
+    # Inject into Phase Objects (Monkey Patching)
+    for item in items:
+        stat = stats_map.get(item.id, {"total": 0.0, "emps": {}})
+        item.total_hours = round(stat["total"], 2)
+        item.hours_per_emp = {k: round(v, 2) for k, v in stat["emps"].items()}
