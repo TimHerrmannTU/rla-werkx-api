@@ -1,62 +1,59 @@
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import extract
-from models.log import LogDailySummary, LogProjectHour
-from models.calendar import CalendarDay
-import calendar
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from collections import defaultdict
 
-class EmployeeService:
+from models.project import Project, ProjectPhase
+from models.log import LogProjectHour, LogDailySummary
+
+class ProjectService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_month_view(self, emp_id: str, year: int, month: int):
-        # 1. Fetch Calendar Range (The Scaffold)
-        # We fetch the CalendarDays directly to ensure we have every day
-        days = self.db.query(CalendarDay).filter(
-            extract('year', CalendarDay.date) == year,
-            extract('month', CalendarDay.date) == month
-        ).order_by(CalendarDay.date).all()
+    def get_project_hours(self, project_id: str):
+        # 1. Fetch Base Project (With Phases eager loaded)
+        pro = self.db.query(Project).filter(Project.id == project_id).first()
+        if not pro: return None
 
-        # 2. Fetch Logs (Eager Load Children)
-        logs = self.db.query(LogDailySummary).options(
-            joinedload(LogDailySummary.project_hours),
-            joinedload(LogDailySummary.timeframes_work),
-            joinedload(LogDailySummary.timeframes_break)
-        ).filter(
-            LogDailySummary.employee_id == emp_id,
-            extract('year', LogDailySummary.date) == year,
-            extract('month', LogDailySummary.date) == month
-        ).all()
+        # 2. Fetch Aggregated Hours (Bottom-Up: Log -> Phase)
+        # We query the new 'log_project_hours' table
+        stats = (
+            self.db.query(
+                LogProjectHour.phase_id,
+                LogDailySummary.employee_id, # Need to join parent log for emp_id
+                func.sum(LogProjectHour.time)
+            )
+            .join(LogDailySummary, LogProjectHour.daily_entry_id == LogDailySummary.id)
+            .join(ProjectPhase, ProjectPhase.id == LogProjectHour.phase_id)
+            .filter(ProjectPhase.project_id == project_id) # Use project_id from ProjectPhase
+            .group_by(LogProjectHour.phase_id, LogDailySummary.employee_id)
+            .all()
+        )
 
-        log_map = {l.date: l for l in logs}
+        # 3. Aggregate
+        phase_stats = defaultdict(lambda: {"total": 0.0, "emps": defaultdict(float)})
+        
+        pro.total_hours = 0.0
+        pro.hours_per_emp = defaultdict(float)
 
-        # 3. Merge
-        payload = []
-        for day in days:
-            log = log_map.get(day.date)
+        for phase_id, emp_id, hours in stats:
+            h = float(hours or 0)
             
-            payload.append({
-                "date": day.date,
-                "is_weekend": day.is_weekend,
-                "holiday_id": day.holiday_id, # Or join holiday table if you want name
-                
-                # Log Data (or Defaults)
-                "status": log.status if log else "A",
-                "target_factor": log.status_target_factor if log else (0.0 if day.is_weekend else 1.0),
-                "note": log.general_note if log else None,
-                
-                # Aggregates
-                "total_hours": sum(p.time for p in log.project_hours) if log else 0.0,
-                
-                # Details
-                "projects": [
-                    {
-                        "project_id": p.project_id,
-                        "phase_id": p.phase_id, 
-                        "flag_id": p.flag_id,
-                        "time": p.time,
-                        "note": p.note
-                    } for p in (log.project_hours if log else [])
-                ]
-            })
+            # Skip if phase_id is None (Direct project booking? Handle separate if needed)
+            if not phase_id: continue
+
+            phase_stats[phase_id]["total"] += h
+            phase_stats[phase_id]["emps"][emp_id] += h
             
-        return payload
+            pro.total_hours += h
+            pro.hours_per_emp[emp_id] += h
+
+        # 4. Inject Stats into Phases
+        for phase in pro.phases:
+            stat = phase_stats[phase.id]
+            phase.total_hours = round(stat["total"], 2)
+            phase.hours_per_emp = {k: round(v, 2) for k, v in stat["emps"].items()}
+
+        pro.total_hours = round(pro.total_hours, 2)
+        pro.hours_per_emp = {k: round(v, 2) for k, v in pro.hours_per_emp.items()}
+
+        return pro

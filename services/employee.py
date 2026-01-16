@@ -1,86 +1,62 @@
-from sqlalchemy import func, and_
-from sqlalchemy.orm import Session
-
-from datetime import date
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import extract
+from models.log import LogDailySummary, LogProjectHour
+from models.calendar import CalendarDay
 import calendar
-
-from models.employee import Employee
-from models.calendar import Holiday
-from models.log import LogDailySummary
 
 class EmployeeService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all(self, active_only: bool = True):
-        query = self.db.query(Employee)
-        if active_only:
-            query = query.filter(Employee.is_active == True)
-        return query.order_by(func.lower(Employee.name)).all()
-    
-    def get_id_map(self, active_only: bool = False):
-        employees = self.get_all(active_only)
-        return {emp.name: emp.id for emp in employees}
+    def get_month_view(self, emp_id: str, year: int, month: int):
+        # 1. Fetch Calendar Range (The Scaffold)
+        # We fetch the CalendarDays directly to ensure we have every day
+        days = self.db.query(CalendarDay).filter(
+            extract('year', CalendarDay.date) == year,
+            extract('month', CalendarDay.date) == month
+        ).order_by(CalendarDay.date).all()
 
-    def get_by_id(self, emp_id: str):
-        return self.db.query(Employee).filter(Employee.id == emp_id).first()
-    
-    def get_month_data(self, emp_id: str, year: int, month: int):
-        # 1. Define Range
-        num_days = calendar.monthrange(year, month)[1]
-        
-        # Legacy Format Helpers
-        # Generate strings "d20250101" to "d20250131" for DB querying
-        start_str = f"d{year}{month:02d}01"
-        end_str   = f"d{year}{month:02d}{num_days:02d}"
-
-        # 2. Fetch Data (Bulk Fetch using String Range)
-        entries = self.db.query(LogDailySummary).filter(
-            LogDailySummary.emp_id == emp_id,
-            LogDailySummary.date_str >= start_str,
-            LogDailySummary.date_str <= end_str
-        ).all()
-        
-        holidays = self.db.query(Holiday).filter(
-            Holiday.date_str >= start_str,
-            Holiday.date_str <= end_str
+        # 2. Fetch Logs (Eager Load Children)
+        logs = self.db.query(LogDailySummary).options(
+            joinedload(LogDailySummary.project_hours),
+            joinedload(LogDailySummary.timeframes_work),
+            joinedload(LogDailySummary.timeframes_break)
+        ).filter(
+            LogDailySummary.employee_id == emp_id,
+            extract('year', LogDailySummary.date) == year,
+            extract('month', LogDailySummary.date) == month
         ).all()
 
-        # 3. Create Lookups
-        entry_map = {e.date_str: e for e in entries}
-        holiday_map = {h.date_str: h for h in holidays}
+        log_map = {l.date: l for l in logs}
 
-        # 4. Generate & Merge
-        days = []
-        for d in range(1, num_days + 1):
-            current = date(year, month, d)
-            legacy_id = f"d{current.strftime('%Y%m%d')}"
+        # 3. Merge
+        payload = []
+        for day in days:
+            log = log_map.get(day.date)
             
-            # Context Logic
-            holiday = holiday_map.get(legacy_id)
-            entry = entry_map.get(legacy_id)
-            is_weekend = current.weekday() >= 5 
-
-            if holiday:
-                is_holiday = True
-                holiday_name = holiday.name
-                # Use DB factor (usually 0.0 or 0.5)
-                target_factor = holiday.target_factor
-            else:
-                is_holiday = False
-                holiday_name = None
-                # Default Logic: Weekend=0, Weekday=1
-                target_factor = 0.0 if is_weekend else 1.0
-
-            days.append({
-                "date": current, # Pydantic will serialize to YYYY-MM-DD
-                "date_legacy": legacy_id,
-                "is_weekend": is_weekend,
-                "is_holiday": is_holiday,
-                "holiday_name": holiday_name,
-                "target_factor": target_factor,
+            payload.append({
+                "date": day.date,
+                "is_weekend": day.is_weekend,
+                "holiday_id": day.holiday_id, # Or join holiday table if you want name
                 
-                # Entry Data
+                # Log Data (or Defaults)
+                "status": log.status if log else "A",
+                "target_factor": log.status_target_factor if log else (0.0 if day.is_weekend else 1.0),
+                "note": log.general_note if log else None,
+                
+                # Aggregates
+                "total_hours": sum(p.time for p in log.project_hours) if log else 0.0,
+                
+                # Details
+                "projects": [
+                    {
+                        "project_id": p.project_id,
+                        "phase_id": p.phase_id, 
+                        "flag_id": p.flag_id,
+                        "time": p.time,
+                        "note": p.note
+                    } for p in (log.project_hours if log else [])
+                ]
             })
-
-        return days
+            
+        return payload
