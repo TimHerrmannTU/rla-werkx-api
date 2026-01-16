@@ -50,3 +50,11 @@ def get_project_long(project_id: str, db: Session = Depends(get_db)):
     
     if not pro: raise HTTPException(404, "Project not found")
     return pro
+
+@router.get("/{project_id}/statistic", response_model=ProjectDetailedSchema)
+def get_project_statistic(project_id: str, db: Session = Depends(get_db)):
+    service = ProjectService(db)
+    pro = service.get_project_statistics(project_id)
+    if not pro:
+        raise HTTPException(404, "Project not found")
+    return pro
