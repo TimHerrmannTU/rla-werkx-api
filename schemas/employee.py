@@ -1,15 +1,22 @@
 from pydantic import BaseModel
-from typing import Optional, List
-from utils.validators import LegacyDate
+from typing import Optional, List, Any
+from datetime import date
 
-class EmployeeBase(BaseModel):
+class ContractSchema(BaseModel):
+    id: int
+    weekly_target: float
+    target_spread: List[float] # [1.0, 1.0...]
+    valid_start: date
+    valid_stop: Optional[date]
+
+    class Config: from_attributes = True
+
+class EmployeeSchema(BaseModel):
     id: str
     name: str
-    target_hours: Optional[float] = None
-    total_hours: Optional[float] = None
-    entry_date: LegacyDate = None
-    exit_date: LegacyDate = None
-    is_active: bool
-
-    class Config:
-        from_attributes = True
+    birthday: Optional[date]
+    entry_date: Optional[date]
+    active: bool
+    contracts: List[ContractSchema] = [] # If needed
+    
+    class Config: from_attributes = True

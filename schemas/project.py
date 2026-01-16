@@ -1,25 +1,29 @@
-from pydantic import BaseModel
-from typing import Optional, List, Dict
-from schemas.flag import FlagBase
-from schemas.phase import PhaseBase, PhaseDetail
+from pydantic import BaseModel, Field
+from typing import Optional, List, Union
 
-class ProjectBase(BaseModel):
+class FlagSchema(BaseModel):
     id: str
-    parent_id: Optional[str] = None
-    desc:  Optional[str] = None 
-    color: Optional[str] = None 
-
-    class Config:
-        from_attributes = True
-        populate_by_name = True
-
-class ProjectDetail(ProjectBase):
-    phases: List[PhaseBase] = []
-    flags: List[FlagBase] = []
-
-class ProjectHours(ProjectBase):
-    total_hours: float = 0.0
-    hours_per_emp: Dict[str, float] = {}
+    name: str
+    color: Optional[str] = None
+    time_budget: Optional[float] = None
     
-    phases: List[PhaseDetail] = []
-    flags: List[FlagBase] = []
+    class Config: from_attributes = True
+
+class PhaseSchema(BaseModel):
+    id: str
+    name: str
+    phase: Optional[str] = None
+
+    class Config: from_attributes = True
+
+class ProjectSchema(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    active: bool
+    
+    # Nested Lists (for detailed view)
+    phases: List[PhaseSchema] = []
+    flags: List[FlagSchema] = [] 
+    
+    class Config:from_attributes = True

@@ -1,57 +1,62 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from collections import defaultdict
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import extract
+from models.log import LogDailySummary, LogProjectHour
+from models.calendar import CalendarDay
+import calendar
 
-from models.projects import Project
-from models.phase import Phase
-from models.time_entry import TimeEntry
-
-class ProjectService:
+class EmployeeService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_project_hours(self, project_id: str):
-        # Fetch Base Project
-        pro = self.db.query(Project).filter(Project.id == project_id).first()
-        if not pro: return None # gate
+    def get_month_view(self, emp_id: str, year: int, month: int):
+        # 1. Fetch Calendar Range (The Scaffold)
+        # We fetch the CalendarDays directly to ensure we have every day
+        days = self.db.query(CalendarDay).filter(
+            extract('year', CalendarDay.date) == year,
+            extract('month', CalendarDay.date) == month
+        ).order_by(CalendarDay.date).all()
 
-        # Fetch Aggregated Hours (Grouped by Phase AND Employee)
-        stats = (
-            self.db.query(
-                TimeEntry.phase_id,
-                TimeEntry.emp_id,
-                func.sum(TimeEntry.hours)
-            )
-            .join(Phase, Phase.id == TimeEntry.phase_id)
-            .filter(Phase.parent_id == project_id)
-            .group_by(TimeEntry.phase_id, TimeEntry.emp_id)
-            .all()
-        )
+        # 2. Fetch Logs (Eager Load Children)
+        logs = self.db.query(LogDailySummary).options(
+            joinedload(LogDailySummary.project_hours),
+            joinedload(LogDailySummary.timeframes_work),
+            joinedload(LogDailySummary.timeframes_break)
+        ).filter(
+            LogDailySummary.employee_id == emp_id,
+            extract('year', LogDailySummary.date) == year,
+            extract('month', LogDailySummary.date) == month
+        ).all()
 
-        # Aggregate Stats
-        phase_stats = defaultdict(lambda: {"total": 0.0, "emps": defaultdict(float)})
-        
-        # Project Totals
-        pro.total_hours = 0.0
-        pro.hours_per_emp = defaultdict(float)
+        log_map = {l.date: l for l in logs}
 
-        for phase_id, emp_id, hours in stats:
-            h = float(hours or 0)
-            # Phase Calc
-            phase_stats[phase_id]["total"] += h
-            phase_stats[phase_id]["emps"][emp_id] += h
-            # Project Calc
-            pro.total_hours += h
-            pro.hours_per_emp[emp_id] += h
-
-        # Stats to Phases
-        for phase in pro.phases:
-            stat = phase_stats[phase.id]
-            phase.total_hours = round(stat["total"], 2)
-            phase.hours_per_emp = {k: round(v, 2) for k, v in stat["emps"].items()}
-
-        pro.total_hours = round(pro.total_hours, 2)
-        pro.hours_per_emp = dict(pro.hours_per_emp)
-        pro.hours_per_emp = {k: round(v, 2) for k, v in pro.hours_per_emp.items()}
-
-        return pro
+        # 3. Merge
+        payload = []
+        for day in days:
+            log = log_map.get(day.date)
+            
+            payload.append({
+                "date": day.date,
+                "is_weekend": day.is_weekend,
+                "holiday_id": day.holiday_id, # Or join holiday table if you want name
+                
+                # Log Data (or Defaults)
+                "status": log.status if log else "A",
+                "target_factor": log.status_target_factor if log else (0.0 if day.is_weekend else 1.0),
+                "note": log.general_note if log else None,
+                
+                # Aggregates
+                "total_hours": sum(p.time for p in log.project_hours) if log else 0.0,
+                
+                # Details
+                "projects": [
+                    {
+                        "project_id": p.project_id,
+                        "phase_id": p.phase_id, 
+                        "flag_id": p.flag_id,
+                        "time": p.time,
+                        "note": p.note
+                    } for p in (log.project_hours if log else [])
+                ]
+            })
+            
+        return payload

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
-from models.projects import Project
+from models.project import Project
 from schemas.project import ProjectBase, ProjectDetail, ProjectHours
 from services.project import ProjectService
 

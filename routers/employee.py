@@ -2,9 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 
-from models.employees import Employee
+from models.employee import Employee
 from schemas.employee import EmployeeBase
 from services.employee import EmployeeService
+
+from schemas.log import DailyLogSchema
 
 router = APIRouter(prefix="/api/employees", tags=["Employees"])
 
@@ -24,7 +26,7 @@ def get_employee_short(emp_id: str, db: Session = Depends(get_db)):
     if not emp: raise HTTPException(404, "Employee not found")
     return emp
 
-@router.get("/{emp_id}/{YYYY}/{MM}")
-def get_employee_month(emp_id: str, YYYY: int, MM: int, db: Session = Depends(get_db)):
+@router.get("/{emp_id}/{year}/{month}", response_model=list[DailyLogSchema])
+def get_employee_month(emp_id: str, year: int, month: int, db: Session = Depends(get_db)):
     service = EmployeeService(db)
-    return service.get_month_data(emp_id, YYYY, MM)
+    return service.get_month_view(emp_id, year, month)

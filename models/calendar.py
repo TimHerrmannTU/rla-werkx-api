@@ -18,7 +18,6 @@ class CalendarDay(Base):
 class Holiday(Base):
     __tablename__ = "calendar_holidays"
     
-    # Auto-increment ID is fine for holidays
     id = Column(Integer, primary_key=True) 
     date = Column(Date, ForeignKey("calendar_days.date"))
     name = Column(String(100))

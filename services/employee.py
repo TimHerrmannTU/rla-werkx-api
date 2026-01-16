@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from datetime import date
 import calendar
 
-from models.employees import Employee
-from models.holiday import Holiday
-from models.time_entry import TimeEntry
+from models.employee import Employee
+from models.calendar import Holiday
+from models.log import LogDailySummary
 
 class EmployeeService:
     def __init__(self, db: Session):
@@ -35,10 +35,10 @@ class EmployeeService:
         end_str   = f"d{year}{month:02d}{num_days:02d}"
 
         # 2. Fetch Data (Bulk Fetch using String Range)
-        entries = self.db.query(TimeEntry).filter(
-            TimeEntry.emp_id == emp_id,
-            TimeEntry.date_str >= start_str,
-            TimeEntry.date_str <= end_str
+        entries = self.db.query(LogDailySummary).filter(
+            LogDailySummary.emp_id == emp_id,
+            LogDailySummary.date_str >= start_str,
+            LogDailySummary.date_str <= end_str
         ).all()
         
         holidays = self.db.query(Holiday).filter(
