@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, Date, Float, Boolean, ForeignKey, JSON, Time, UniqueConstraint
+from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -15,6 +16,8 @@ class CalendarDay(Base):
     week_number = Column(Integer)
     is_weekend = Column(Boolean)
 
+    holiday = relationship("Holiday", back_populates="calendar_day")
+
 class Holiday(Base):
     __tablename__ = "calendar_holidays"
     
@@ -24,3 +27,5 @@ class Holiday(Base):
     region = Column(String(5))
     target_factor = Column(Float, default=0.0)
     is_company_holiday = Column(Boolean, default=False)
+
+    calendar_day = relationship("CalendarDay", back_populates="holiday")

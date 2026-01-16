@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import extract
-
 from models.log import LogDailySummary
 from models.calendar import CalendarDay
 
@@ -37,24 +36,25 @@ class EmployeeService:
             payload.append({
                 "date": day.date,
                 "is_weekend": day.is_weekend,
-                "holiday_id": day.holiday_id, # Or join holiday table if you want name
+                "holiday": day.holiday,
                 
                 # Log Data (or Defaults)
                 "status": log.status if log else "A",
-                "target_factor": log.status_target_factor if log else (0.0 if day.is_weekend else 1.0),
+                "status_target_factor": log.status_target_factor if log else (0.0 if day.is_weekend else 1.0),
                 "note": log.general_note if log else None,
                 
                 # Aggregates
                 "total_hours": sum(p.time for p in log.project_hours) if log else 0.0,
                 
                 # Details
-                "projects": [
+                "project_hours": [
                     {
                         "project_id": p.project_id,
                         "phase_id": p.phase_id, 
                         "flag_id": p.flag_id,
                         "time": p.time,
-                        "note": p.note
+                        "note": p.note,
+                        "id": p.id,
                     } for p in (log.project_hours if log else [])
                 ]
             })
