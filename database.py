@@ -1,13 +1,12 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from config import SQLALCHEMY_DATABASE_URL
+from dotenv import load_dotenv
 
-# Update with your credentials
-# URL format: mysql+mysqlconnector://USER:PASSWORD@HOST/DB_NAME
-
+DB_URL = f"mysql+mysqlconnector://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
+    DB_URL, 
     pool_pre_ping=True, # Auto-reconnect if DB connection drops
     pool_size=10,
     max_overflow=20
