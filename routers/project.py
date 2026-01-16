@@ -6,7 +6,7 @@ from models.project import Project
 
 from services.project import ProjectService
 
-from schemas.project import ProjectSchema
+from schemas.project import ProjectSchema, ProjectDetailedSchema
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
@@ -19,7 +19,7 @@ def get_projects_short(db: Session = Depends(get_db)):
     """Default: Returns essential data only (Base)."""
     return db.query(Project).order_by(Project.id).all()
 
-@router.get("/detailed", response_model=list[ProjectSchema])
+@router.get("/detailed", response_model=list[ProjectDetailedSchema])
 def get_projects_long(db: Session = Depends(get_db)):
     """Detailed: Returns everything + flags/phases."""
     # Eager load both phases and flags
@@ -40,7 +40,7 @@ def get_project_short(project_id: str, db: Session = Depends(get_db)):
     if not pro: raise HTTPException(404, "Project not found")
     return pro
 
-@router.get("/{project_id}/detailed", response_model=ProjectSchema)
+@router.get("/{project_id}/detailed", response_model=ProjectDetailedSchema)
 def get_project_long(project_id: str, db: Session = Depends(get_db)):
     """Detailed: Single project with children."""
     pro = db.query(Project).options(

@@ -22,6 +22,14 @@ class ProjectSchema(BaseModel):
     description: Optional[str] = None
     active: bool
     
+    class Config:from_attributes = True
+
+class ProjectDetailedSchema(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    active: bool
+    
     # Nested Lists (for detailed view)
     phases: List[PhaseSchema] = []
     flags: List[FlagSchema] = [] 
