@@ -8,7 +8,7 @@ class HolidaySchema(BaseModel):
     name: str
     region: str
     target_factor: float
-    is_office_holiday: bool
+    is_company_holiday: bool
     
     class Config: from_attributes = True
 

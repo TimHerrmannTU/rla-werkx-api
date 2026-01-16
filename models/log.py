@@ -17,7 +17,7 @@ class LogDailySummary(Base):
     status_target_factor = Column(Float, default=1.0)
     status_note = Column(String(255))
     general_note = Column(Text)
-
+    
     project_hours = relationship("LogProjectHour", back_populates="daily_entry")
     timeframes_work = relationship("LogTimeframeWork", back_populates="daily_entry")
     timeframes_break = relationship("LogTimeframeBreak", back_populates="daily_entry")

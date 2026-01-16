@@ -16,7 +16,7 @@ class CalendarDay(Base):
     week_number = Column(Integer)
     is_weekend = Column(Boolean)
 
-    holiday = relationship("Holiday", back_populates="calendar_day")
+    holiday = relationship("Holiday", back_populates="calendar_day", uselist=False)
 
 class Holiday(Base):
     __tablename__ = "calendar_holidays"
