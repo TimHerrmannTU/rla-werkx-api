@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from collections import defaultdict
 
-from models.project import Project
+from models.projects import Project
 from models.phase import Phase
 from models.time_entry import TimeEntry
 

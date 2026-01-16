@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import date
 import calendar
 
-from models.employee import Employee
+from models.employees import Employee
 from models.holiday import Holiday
 from models.time_entry import TimeEntry
 

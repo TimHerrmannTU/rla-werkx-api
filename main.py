@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import (
-    employee,
-    project,
+    employees,
     flag ,
-    phase
+    phase,
+    projects
 )
 
 from routers import (
@@ -23,5 +23,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(project.router) 
-app.include_router(employee.router)
+app.include_router(projects.router) 
+app.include_router(employees.router)
