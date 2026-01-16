@@ -10,10 +10,10 @@ class TimeframeSchema(BaseModel):
 
 class ProjectLogSchema(BaseModel):
     id: int
+    time: float
     project_id: str
     phase_id: Optional[str] = None
     flag_id: Optional[str] = None
-    time: float
     note: Optional[str] = None
     
     class Config: from_attributes = True

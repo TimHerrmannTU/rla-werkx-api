@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Union
+from pydantic import BaseModel
+from typing import Optional, List
 
 class FlagSchema(BaseModel):
     id: str

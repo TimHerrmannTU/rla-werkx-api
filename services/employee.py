@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import extract
-from models.log import LogDailySummary, LogProjectHour
+
+from models.log import LogDailySummary
 from models.calendar import CalendarDay
-import calendar
 
 class EmployeeService:
     def __init__(self, db: Session):

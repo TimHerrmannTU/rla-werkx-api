@@ -3,14 +3,16 @@ from sqlalchemy.orm import Session, joinedload
 from database import get_db
 
 from models.project import Project
-from schemas.project import ProjectSchema
+
 from services.project import ProjectService
+
+from schemas.project import ProjectSchema
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
-# --------------------------
-# LIST ENDPOINTS
-# --------------------------
+##################
+# LIST ENDPOINTS #
+##################
 
 @router.get("/", response_model=list[ProjectSchema])
 def get_projects_short(db: Session = Depends(get_db)):
@@ -27,9 +29,9 @@ def get_projects_long(db: Session = Depends(get_db)):
     ).order_by(Project.id).all()
 
 
-# --------------------------
-# SINGLE ENDPOINTS
-# --------------------------
+####################
+# SINGLE ENDPOINTS #
+####################
 
 @router.get("/{project_id}", response_model=ProjectSchema)
 def get_project_short(project_id: str, db: Session = Depends(get_db)):

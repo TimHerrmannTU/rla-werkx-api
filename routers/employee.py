@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from database import get_db
 
 from models.employee import Employee
-from schemas.employee import EmployeeSchema
+
 from services.employee import EmployeeService
 
+from schemas.employee import EmployeeSchema
 from schemas.log import DailyLogSchema
 
 router = APIRouter(prefix="/api/employees", tags=["Employees"])
