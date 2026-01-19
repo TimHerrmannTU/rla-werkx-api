@@ -30,7 +30,7 @@ def get_employee_short(emp_id: str, db: Session = Depends(get_db)):
         joinedload(Employee.vacation_claims)
     ).filter(Employee.id == emp_id).first()
 
-@router.get("/{emp_id}/{year}/{month}", response_model=list[DailyLogSchema])
+@router.get("/{emp_id}/{year}/{month}")
 def get_employee_month(emp_id: str, year: int, month: int, db: Session = Depends(get_db)):
     service = EmployeeService(db)
     return service.get_month_view(emp_id, year, month)
