@@ -11,6 +11,6 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 @router.get("/")
 def get_employees(db: Session = Depends(get_db)):
     start_date = date(2025, 1, 1)
-    end_date = date.today()
+    end_date = date(2026, 1, 1)
     service = DashboardService(db)
     return service.get_project_stats(start_date=start_date, end_date=end_date)

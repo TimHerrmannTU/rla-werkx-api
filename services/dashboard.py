@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import extract, func
+from collections import defaultdict
 
 from models.project import Project, ProjectPhase
 from models.log import *
@@ -35,6 +36,8 @@ class DashboardService:
         previous_data = fetch_totals(start_date - timedelta(days=duration - 1), start_date - timedelta(days=1))
 
         sorted_pros = sorted(current_data.keys(), key=lambda k: current_data[k], reverse=True)[:10]
+        top_ids = [pid for pid in sorted_pros]
+
         final_pros = []
         for pid in sorted_pros:
             curr_h = current_data[pid]
@@ -45,13 +48,59 @@ class DashboardService:
             pct = ((diff / prev_h) * 100) if prev_h > 0 else 100.0 if curr_h > 0 else 0.0
             
             final_pros.append({
-                "project_id": pid,
+                "pro_id": pid,
                 "hours": round(curr_h, 2),
                 "trend_abs": round(diff, 2), # e.g. +50.0 hours
                 "trend_pct": round(pct, 1)   # e.g. +20.5%
             })
             
-        payload["top_projects"] = final_pros
+        payload["top_pros"] = final_pros
+
+        ##################
+        # TOP 10 HISTORY #
+        ##################
+
+        history_query = (
+            self.db.query(
+                LogProjectHour.project_id,
+                func.date_format(LogDailySummary.date, '%Y-%m').label('month'),
+                func.sum(LogProjectHour.time)
+            )
+            .join(LogDailySummary)
+            .filter(
+                LogDailySummary.date >= start_date, 
+                LogDailySummary.date <= end_date,
+                LogProjectHour.project_id.in_(top_ids)
+            )
+            .group_by(LogProjectHour.project_id, 'month')
+            .order_by('month')
+            .all()
+        )
+        
+        history_map = defaultdict(dict)
+        all_months = set()
+        
+        for pid, month, hours in history_query:
+            history_map[pid][month] = float(hours)
+            all_months.add(month)
+            
+        sorted_months = sorted(list(all_months))
+        
+        datasets = []
+        for pid in top_ids:
+            data_points = []
+            for m in sorted_months:
+                data_points.append(history_map[pid].get(m, 0.0))
+                
+            datasets.append({
+                "label": pid,
+                "data": data_points
+            })
+            
+        payload["history"] = {
+            "labels": sorted_months,
+            "datasets": datasets
+        }
         
         ######################
         # PHASE DISTRIBUTION #
