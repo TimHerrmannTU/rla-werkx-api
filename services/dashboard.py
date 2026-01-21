@@ -63,6 +63,23 @@ class DashboardService:
         # TOP 10 HISTORY #
         ##################
 
+        global_totals_query = (
+            self.db.query(
+                func.date_format(LogDailySummary.date, '%Y-%m').label('month'),
+                func.sum(LogProjectHour.time)
+            )
+            .join(LogDailySummary)
+            .filter(
+                LogDailySummary.date >= start_date, 
+                LogDailySummary.date <= end_date
+                # Apply internal filter here too if requested? 
+                # Usually 'Total' implies everything, but consistency matters.
+            )
+            .group_by('month')
+            .all()
+        )
+        global_month_map = {row[0]: float(row[1]) for row in global_totals_query}
+
         history_query = (
             self.db.query(
                 LogProjectHour.project_id,
@@ -97,7 +114,9 @@ class DashboardService:
         for pid in top_ids:
             data_points = []
             for m in sorted_months:
-                data_points.append(round(history_map[pid].get(m, 0.0)))
+                pro_hours = history_map[pid].get(m, 0.0)
+                pro_hours_rel = 100 * pro_hours / global_month_map[m]
+                data_points.append(round(pro_hours_rel, 2))
                 
             datasets.append({
                 "name": pid,
