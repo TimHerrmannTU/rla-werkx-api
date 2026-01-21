@@ -10,7 +10,8 @@ from models import (
 
 from routers import (
     project,
-    employee
+    employee,
+    dashboard
 )
 
 # Initialize the App
@@ -25,3 +26,4 @@ app.add_middleware(
 
 app.include_router(project.router) 
 app.include_router(employee.router)
+app.include_router(dashboard.router)
