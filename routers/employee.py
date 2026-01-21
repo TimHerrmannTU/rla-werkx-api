@@ -25,10 +25,10 @@ def get_employee_id_name_map(db: Session = Depends(get_db)):
 @router.get("/{emp_id}", response_model=EmployeeDetailedSchema)
 def get_employee_short(emp_id: str, db: Session = Depends(get_db)):
     """Default: Single project essential data."""
-    return db.query(Employee).options(
-        joinedload(Employee.hour_targets),
-        joinedload(Employee.vacation_claims)
-    ).filter(Employee.id == emp_id).first()
+    service = EmployeeService(db)
+    emp = service.get_detailed(emp_id)
+    if not emp: raise HTTPException(404, "Not found")
+    return emp
 
 @router.get("/{emp_id}/{year}/{month}")
 def get_employee_month(emp_id: str, year: int, month: int, db: Session = Depends(get_db)):

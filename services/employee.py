@@ -6,11 +6,44 @@ from sqlalchemy import extract
 from models.log import LogDailySummary
 from models.calendar import CalendarDay
 
-from models.employee import Employee, EmployeeHourTarget
+from models.employee import Employee, EmployeeHourTarget, EmployeeVacationClaim
+from models.config import VacationRule
 
 class EmployeeService:
     def __init__(self, db: Session):
         self.db = db
+
+    def get_detailed(self, emp_id: str):
+        emp = self.db.query(Employee).options(
+            joinedload(Employee.hour_targets),
+            joinedload(Employee.vacation_claims)
+        ).filter(Employee.id == emp_id).first()
+        
+        if not emp: return None # gate
+        
+        first_year = emp.first_work_year
+        current_year = date.today().year
+
+        year_lut = [claim.year for claim in emp.vacation_claims]
+        final_claims = emp.vacation_claims or []
+
+        for year in range(first_year, current_year + 1):
+            if year not in year_lut:
+                seniority = year - first_year
+                rule = self.db.query(VacationRule).filter(
+                    VacationRule.min_years <= seniority,
+                    VacationRule.max_years >= seniority
+                ).first()
+
+                days = rule.days if rule else 0.0
+                claim_object = EmployeeVacationClaim(
+                    year=year,
+                    days=days
+                )
+                final_claims.append(claim_object)
+
+        emp.vacation_claims = final_claims
+        return emp
 
     def get_lifetime_stats(self, emp_id: str, calc_end: date | None = None):
         calc_start = self.db.query(Employee).filter(Employee.id == emp_id).first().start_tracking_date
@@ -88,7 +121,6 @@ class EmployeeService:
         
         return target_sum, actual_sum
                 
-
     def get_month_view(self, emp_id: str, year: int, month: int):
         # Fetch Calendar Range (The Scaffold)
         days = self.db.query(CalendarDay).options(
