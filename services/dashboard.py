@@ -18,7 +18,10 @@ class DashboardService:
         ###################        
         def fetch_totals(s, e): # HELPER FUNCTION
             results = (
-                self.db.query(LogProjectHour.project_id, func.sum(LogProjectHour.time))
+                self.db.query(
+                    LogProjectHour.project_id, 
+                    func.sum(LogProjectHour.time)
+                )
                     .join(LogDailySummary)
                     .filter(
                         LogDailySummary.date >= s, 
@@ -63,9 +66,11 @@ class DashboardService:
         history_query = (
             self.db.query(
                 LogProjectHour.project_id,
+                Project.color,
                 func.date_format(LogDailySummary.date, '%Y-%m').label('month'),
                 func.sum(LogProjectHour.time)
             )
+            .join(Project, Project.id == LogProjectHour.project_id)
             .join(LogDailySummary)
             .filter(
                 LogDailySummary.date >= start_date, 
@@ -77,12 +82,14 @@ class DashboardService:
             .all()
         )
         
+        color_map = {}
         history_map = defaultdict(dict)
         all_months = set()
         
-        for pid, month, hours in history_query:
+        for pid, color, month, hours in history_query:
             history_map[pid][month] = float(hours)
             all_months.add(month)
+            color_map[pid] = color
             
         sorted_months = sorted(list(all_months))
         
@@ -90,10 +97,10 @@ class DashboardService:
         for pid in top_ids:
             data_points = []
             for m in sorted_months:
-                data_points.append(history_map[pid].get(m, 0.0))
+                data_points.append(round(history_map[pid].get(m, 0.0)))
                 
             datasets.append({
-                "label": pid,
+                "name": pid,
                 "data": data_points
             })
             
@@ -101,6 +108,7 @@ class DashboardService:
             "labels": sorted_months,
             "datasets": datasets
         }
+        payload["pro_colors"] = color_map
         
         ######################
         # PHASE DISTRIBUTION #
