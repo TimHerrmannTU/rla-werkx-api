@@ -10,24 +10,30 @@ class DashboardService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_project_stats(self, start_date: date, end_date: date):
+    def get_project_stats(self, start_date: date, end_date: date, include_internal: bool = False):
         payload = {}
+
+        def apply_scope(query, s: date = start_date, e: date = end_date): # applys filters to all queries
+            q = query.filter(
+                LogDailySummary.date >= s, 
+                LogDailySummary.date <= e
+            )
+            if not include_internal:
+                q = q.filter(LogProjectHour.project_id.notlike("AA%"))
+            return q
 
         ###################
         # TOP 10 PROJECTS #
         ###################        
         def fetch_totals(s, e): # HELPER FUNCTION
-            results = (
+            query = (
                 self.db.query(
                     LogProjectHour.project_id, 
                     func.sum(LogProjectHour.time)
-                )
-                    .join(LogDailySummary)
-                    .filter(
-                        LogDailySummary.date >= s, 
-                        LogDailySummary.date <= e,
-                        LogProjectHour.project_id.notlike("AA%") # Exclude Internal
-                    )
+                ).join(LogDailySummary)
+            )
+            results = (
+                apply_scope(query, s, e)
                     .group_by(LogProjectHour.project_id)
                     .all()
             )
@@ -62,32 +68,25 @@ class DashboardService:
         ##################
         # TOP 10 HISTORY #
         ##################
-
-        global_totals_query = (
-            self.db.query(
-                func.date_format(LogDailySummary.date, '%Y-%m').label('month'),
-                func.sum(LogProjectHour.time)
-            )
-            .join(LogDailySummary)
-            .filter(
-                LogDailySummary.date >= start_date, 
-                LogDailySummary.date <= end_date
-                # Apply internal filter here too if requested? 
-                # Usually 'Total' implies everything, but consistency matters.
+        monthly_totals_query = (
+            apply_scope(
+                self.db.query(
+                    func.date_format(LogDailySummary.date, '%Y-%m').label('month'),
+                    func.sum(LogProjectHour.time)
+                ).join(LogDailySummary)
             )
             .group_by('month')
             .all()
         )
-        global_month_map = {row[0]: float(row[1]) for row in global_totals_query}
+        global_month_map = {month: float(hours) for month, hours in monthly_totals_query}
+        payload["total_actual"] = global_month_map 
 
-        history_query = (
+        monthly_project_sums_query = (
             self.db.query(
                 LogProjectHour.project_id,
-                Project.color,
                 func.date_format(LogDailySummary.date, '%Y-%m').label('month'),
                 func.sum(LogProjectHour.time)
             )
-            .join(Project, Project.id == LogProjectHour.project_id)
             .join(LogDailySummary)
             .filter(
                 LogDailySummary.date >= start_date, 
@@ -99,14 +98,12 @@ class DashboardService:
             .all()
         )
         
-        color_map = {}
         history_map = defaultdict(dict)
         all_months = set()
         
-        for pid, color, month, hours in history_query:
+        for pid, month, hours in monthly_project_sums_query:
             history_map[pid][month] = float(hours)
             all_months.add(month)
-            color_map[pid] = color
             
         sorted_months = sorted(list(all_months))
         
@@ -127,23 +124,22 @@ class DashboardService:
             "labels": sorted_months,
             "datasets": datasets
         }
-        payload["pro_colors"] = color_map
         
         ######################
         # PHASE DISTRIBUTION #
         ######################
         phase_query = (
-            self.db.query(ProjectPhase.phase, func.sum(LogProjectHour.time))
+            apply_scope(
+                self.db.query(
+                    ProjectPhase.phase, 
+                    func.sum(LogProjectHour.time)
+                )
                 .join(LogProjectHour, LogProjectHour.phase_id == ProjectPhase.id)
                 .join(LogDailySummary)
-                .filter(
-                    LogDailySummary.date >= start_date, 
-                    LogDailySummary.date <= end_date,
-                    LogProjectHour.project_id.notlike("AA%") # Exclude Internal
-                )
-                .group_by(ProjectPhase.phase)
-                .order_by(ProjectPhase.phase)
-                .all()
+            )
+            .group_by(ProjectPhase.phase)
+            .order_by(ProjectPhase.phase)
+            .all()
         )
 
         total_hours = sum(hours or 0 for _, hours in phase_query)
@@ -158,4 +154,14 @@ class DashboardService:
 
         payload["phase_distribution"] = phase_stats
         
+        ##################
+        # PROJECT COLORS #
+        ##################
+        pro_color_results = (
+            self.db.query(Project.id, Project.color)
+                .filter(Project.id.in_(top_ids))
+                .all()
+        )
+        payload["pro_colors"] = {id: color for id, color in pro_color_results}
+
         return payload
