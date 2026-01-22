@@ -19,7 +19,10 @@ class DashboardService:
                 LogDailySummary.date <= e
             )
             if not include_internal:
-                q = q.filter(LogProjectHour.project_id.notlike("AA%"))
+                q = q.filter(
+                    LogProjectHour.project_id.notlike("AA%"),
+                    LogProjectHour.project_id.notlike("WB%")
+                )
             return q
 
         ###################
