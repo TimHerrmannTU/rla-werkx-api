@@ -68,33 +68,31 @@ class DashboardService:
         ##################
         # TOP 10 HISTORY #
         ##################
+        date_to_key = func.date_format(LogDailySummary.date, '%Y-%m')
         monthly_totals_query = (
             apply_scope(
                 self.db.query(
-                    func.date_format(LogDailySummary.date, '%Y-%m').label('month'),
+                    date_to_key,
                     func.sum(LogProjectHour.time)
                 ).join(LogDailySummary)
             )
-            .group_by('month')
+            .group_by(date_to_key)
             .all()
         )
         global_month_map = {month: float(hours) for month, hours in monthly_totals_query}
         payload["total_actual"] = global_month_map 
 
         monthly_project_sums_query = (
-            self.db.query(
-                LogProjectHour.project_id,
-                func.date_format(LogDailySummary.date, '%Y-%m').label('month'),
-                func.sum(LogProjectHour.time)
+            apply_scope(
+                self.db.query(
+                    LogProjectHour.project_id,
+                    date_to_key,
+                    func.sum(LogProjectHour.time)
+                ).join(LogDailySummary)
             )
-            .join(LogDailySummary)
-            .filter(
-                LogDailySummary.date >= start_date, 
-                LogDailySummary.date <= end_date,
-                LogProjectHour.project_id.in_(top_ids)
-            )
-            .group_by(LogProjectHour.project_id, 'month')
-            .order_by('month')
+            .filter(LogProjectHour.project_id.in_(top_ids))
+            .group_by(LogProjectHour.project_id, date_to_key)
+            .order_by(date_to_key)
             .all()
         )
         
