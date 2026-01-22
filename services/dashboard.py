@@ -71,6 +71,7 @@ class DashboardService:
         ##################
         # TOP 10 HISTORY #
         ##################
+        # company totals
         date_to_key = func.date_format(LogDailySummary.date, '%Y-%m')
         monthly_totals_query = (
             apply_scope(
@@ -82,9 +83,14 @@ class DashboardService:
             .group_by(date_to_key)
             .all()
         )
-        global_month_map = {month: float(hours) for month, hours in monthly_totals_query}
-        payload["total_actual"] = global_month_map 
+        total_worked_timeframe = round(sum(hours for _, hours in monthly_totals_query))
+        payload["total_worked_company"] = {
+            "total": total_worked_timeframe,
+            "avg_per_month": round(total_worked_timeframe / len(monthly_totals_query)),
+            "per_month": {month: round(hours) for month, hours in monthly_totals_query} 
+        }
 
+        # per project
         monthly_project_sums_query = (
             apply_scope(
                 self.db.query(
@@ -99,29 +105,26 @@ class DashboardService:
             .all()
         )
         
-        history_map = defaultdict(dict)
         all_months = set()
-        
+        history_map = defaultdict(dict)
         for pid, month, hours in monthly_project_sums_query:
             history_map[pid][month] = float(hours)
             all_months.add(month)
-            
         sorted_months = sorted(list(all_months))
         
-        datasets = []
-        for pid in top_ids:
+        datasets = [] # sort the final data by looping
+        for pid in top_ids: # pre-sorted as top 10
             data_points = []
             for m in sorted_months:
                 pro_hours = history_map[pid].get(m, 0.0)
-                pro_hours_rel = 100 * pro_hours / global_month_map[m]
-                data_points.append(round(pro_hours_rel, 2))
+                data_points.append(round(pro_hours, 2))
                 
             datasets.append({
                 "name": pid,
                 "data": data_points
             })
             
-        payload["history"] = {
+        payload["top_ten_pro_history"] = {
             "labels": sorted_months,
             "datasets": datasets
         }
@@ -149,8 +152,7 @@ class DashboardService:
             share = (h / total_hours * 100) if total_hours > 0 else 0.0
             phase_stats.append({
                 "phase": p_num,
-                "hours": round(h, 2),
-                "share": round(share, 1)
+                "hours": round(h)
             })
 
         payload["phase_distribution"] = phase_stats
