@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import Optional, List, Any
 from datetime import date
 
+from schemas.location import LocationSchema
+
 class ContractSchema(BaseModel):
     weekly_target: float
     target_spread: List[float] # [1.0, 1.0...]
@@ -22,6 +24,8 @@ class EmployeeSchema(BaseModel):
     name: str
     birthday: Optional[date]
     entry_date: Optional[date]
+    location: LocationSchema
+    color: str
     active: bool
     
     class Config: from_attributes = True
@@ -31,6 +35,8 @@ class EmployeeDetailedSchema(BaseModel):
     name: str
     birthday: Optional[date]
     entry_date: Optional[date]
+    location: LocationSchema
+    color: str
     active: bool
     hour_targets: List[ContractSchema] = [] # If needed
     vacation_claims: List[HolidayClaimSchema] = []

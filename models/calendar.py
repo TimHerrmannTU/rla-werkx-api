@@ -24,8 +24,8 @@ class Holiday(Base):
     id = Column(Integer, primary_key=True) 
     date = Column(Date, ForeignKey("calendar_days.date"))
     name = Column(String(100))
-    region = Column(String(5))
     target_factor = Column(Float, default=0.0)
     is_company_holiday = Column(Boolean, default=False)
 
+    location = relationship("Location", back_populates="holidays")
     calendar_day = relationship("CalendarDay", back_populates="holiday")

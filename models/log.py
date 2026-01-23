@@ -20,28 +20,19 @@ class LogDailySummary(Base):
     
     target_hours = Column(Float)
     project_hours = relationship("LogProjectHour", back_populates="daily_entry")
-    timeframes_work = relationship("LogTimeframeWork", back_populates="daily_entry")
-    timeframes_break = relationship("LogTimeframeBreak", back_populates="daily_entry")
+    timeframes = relationship("LogTimeframe", back_populates="daily_entry")
     
     __table_args__ = (UniqueConstraint('date', 'employee_id', name='uix_log_daily_emp_date'),)
 
-class LogTimeframeWork(Base):
+class LogTimeframe(Base):
     __tablename__ = "log_timeframes_work"
     id = Column(Integer, primary_key=True)
     daily_entry_id = Column(Integer, ForeignKey("log_daily_summary.id"))
     start = Column(Time)
     stop = Column(Time)
+    is_break = Column(Boolean)
     
     daily_entry = relationship("LogDailySummary", back_populates="timeframes_work")
-
-class LogTimeframeBreak(Base):
-    __tablename__ = "log_timeframes_break"
-    id = Column(Integer, primary_key=True)
-    daily_entry_id = Column(Integer, ForeignKey("log_daily_summary.id"))
-    start = Column(Time)
-    stop = Column(Time)
-    
-    daily_entry = relationship("LogDailySummary", back_populates="timeframes_break")
 
 class LogProjectHour(Base):
     __tablename__ = "log_project_hours"

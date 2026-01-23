@@ -9,6 +9,7 @@ class Employee(Base):
     name = Column(String(100))
     password_hash = Column(String(255))
     
+    color = Column(String)
     birthday = Column(Date)
     entry_date = Column(Date)
     exit_date = Column(Date, nullable=True)
@@ -17,6 +18,7 @@ class Employee(Base):
     active = Column(Boolean, default=True)
 
     # Relationships
+    location = relationship("Location", back_populates="employees")
     hour_targets = relationship("EmployeeHourTarget", back_populates="employee")
     vacation_claims = relationship("EmployeeVacationClaim", back_populates="employee")
 

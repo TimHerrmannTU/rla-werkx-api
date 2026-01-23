@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from datetime import date
 from typing import Optional
 
+from schemas.location import LocationSchema
+
 class HolidaySchema(BaseModel):
     id: int
     date: date
@@ -9,6 +11,7 @@ class HolidaySchema(BaseModel):
     region: str
     target_factor: float
     is_company_holiday: bool
+    location: LocationSchema
     
     class Config: from_attributes = True
 
