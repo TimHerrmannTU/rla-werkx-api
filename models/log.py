@@ -2,8 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, Date, Float, Boolean, Fore
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-
-Base = declarative_base()
+from database import Base
 
 # LOGGING STUFF
 class LogDailySummary(Base):
@@ -25,14 +24,14 @@ class LogDailySummary(Base):
     __table_args__ = (UniqueConstraint('date', 'employee_id', name='uix_log_daily_emp_date'),)
 
 class LogTimeframe(Base):
-    __tablename__ = "log_timeframes_work"
+    __tablename__ = "log_timeframes"
     id = Column(Integer, primary_key=True)
     daily_entry_id = Column(Integer, ForeignKey("log_daily_summary.id"))
     start = Column(Time)
     stop = Column(Time)
     is_break = Column(Boolean)
     
-    daily_entry = relationship("LogDailySummary", back_populates="timeframes_work")
+    daily_entry = relationship("LogDailySummary", back_populates="timeframes")
 
 class LogProjectHour(Base):
     __tablename__ = "log_project_hours"

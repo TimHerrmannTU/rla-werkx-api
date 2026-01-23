@@ -17,6 +17,8 @@ class Employee(Base):
     start_tracking_date = Column(Date)
     active = Column(Boolean, default=True)
 
+    location_id = Column(Integer, ForeignKey("locations.id"))
+
     # Relationships
     location = relationship("Location", back_populates="employees")
     hour_targets = relationship("EmployeeHourTarget", back_populates="employee")

@@ -133,8 +133,7 @@ class EmployeeService:
         # Fetch Logs
         logs = self.db.query(LogDailySummary).options(
             joinedload(LogDailySummary.project_hours),
-            joinedload(LogDailySummary.timeframes_work),
-            joinedload(LogDailySummary.timeframes_break)
+            joinedload(LogDailySummary.timeframes)
         ).filter(
             LogDailySummary.employee_id == emp_id,
             extract('year', LogDailySummary.date) == year,
@@ -181,8 +180,7 @@ class EmployeeService:
                 "target_hours": tgt,
                 "total_hours": sum(p.time for p in log.project_hours) if log else 0.0,
                 "project_hours": log.project_hours if log else [],
-                "timeframes_work": log.timeframes_work if log else [],
-                "timeframes_break": log.timeframes_break if log else []
+                "timeframes": log.timeframes if log else [],
             })
         
         lt_sum_target, lt_sum_actual = self.get_lifetime_stats(emp_id=emp_id, calc_end=date(year, month, 1))

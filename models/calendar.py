@@ -2,9 +2,8 @@ from sqlalchemy import Column, Integer, String, Text, Date, Float, Boolean, Fore
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from database import Base
 
-# CALENDAR STUFF #
 class CalendarDay(Base):
     __tablename__ = "calendar_days"
     
@@ -26,6 +25,7 @@ class Holiday(Base):
     name = Column(String(100))
     target_factor = Column(Float, default=0.0)
     is_company_holiday = Column(Boolean, default=False)
+    location_id = Column(Integer, ForeignKey("locations.id"))
 
     location = relationship("Location", back_populates="holidays")
     calendar_day = relationship("CalendarDay", back_populates="holiday")

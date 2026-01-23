@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, Date, Float, Boolean, Fore
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from database import Base
 
 # PROJECT STUFF #
 class Project(Base):

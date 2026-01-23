@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from models import (
     calendar,
+    location,
     employee,
     log,
     project
