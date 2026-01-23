@@ -8,7 +8,7 @@ class HolidaySchema(BaseModel):
     id: int
     date: date
     name: str
-    region: str
+    location: str
     target_factor: float
     is_company_holiday: bool
     location: LocationSchema

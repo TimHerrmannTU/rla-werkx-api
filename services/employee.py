@@ -155,9 +155,14 @@ class EmployeeService:
         day_list = []
         for day in days:
             log = log_map.get(day.date)
-
+            tf_work = []; tf_break = []
             if log:
                 tgt = log.target_hours if log else 0.0
+                if log.timeframes:
+                    for tf in log.timeframes:
+                        tf_clean = {"start": tf.start, "stop": tf.stop}
+                        if tf.is_break: tf_break.append(tf_clean)
+                        else: tf_work.append(tf_clean)
             elif day.is_weekend:
                 tgt = 0
             elif day.holiday:
@@ -180,7 +185,8 @@ class EmployeeService:
                 "target_hours": tgt,
                 "total_hours": sum(p.time for p in log.project_hours) if log else 0.0,
                 "project_hours": log.project_hours if log else [],
-                "timeframes": log.timeframes if log else [],
+                "timeframes_work": tf_work,
+                "timeframes_break": tf_break
             })
         
         lt_sum_target, lt_sum_actual = self.get_lifetime_stats(emp_id=emp_id, calc_end=date(year, month, 1))

@@ -7,7 +7,6 @@ from schemas.calendar import CalendarDaySchema
 class TimeframeSchema(BaseModel):
     start: Optional[time]
     stop: Optional[time]
-    is_break: bool
 
     class Config: from_attributes = True
 
@@ -21,17 +20,23 @@ class ProjectLogSchema(BaseModel):
     
     class Config: from_attributes = True
 
-class DailyLogSchema(BaseModel):
+class DailyViewSchema(BaseModel):
     date: date
-    meta: CalendarDaySchema
-
+    meta: CalendarDaySchema # Nested Calendar Data
+    
     status: str
     status_target_factor: float
-    general_note: Optional[str] = None
-
-    target_hours: float = 0.0    
-    total_hours: Optional[float] = 0.0
+    note: Optional[str] = None
+    
+    target_hours: float
+    total_hours: float
+    
     project_hours: List[ProjectLogSchema] = []
-    timeframes: List[TimeframeSchema] = []
+    timeframes_work: List[TimeframeSchema] = []
+    timeframes_break: List[TimeframeSchema] = []
 
     class Config: from_attributes = True
+
+class MonthViewSchema(BaseModel):
+    meta: dict # Or specific MonthStats schema
+    days: List[DailyViewSchema]
