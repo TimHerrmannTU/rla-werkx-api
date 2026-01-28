@@ -276,14 +276,20 @@ class EmployeeService:
         ###################
         # DATA CONVERSION #
         ###################
-        pro_contribution_map = defaultdict(float)
+        pcm = defaultdict(lambda: {
+            "phases": defaultdict(float), 
+            "total": 0,
+            "color": "#000000" 
+        })
         pro_id_set = set()
+        total_worktime = 0
         for log in logs:
             for pro_log in log.project_hours:
-                pro_contribution_map[pro_log.phase_id] += pro_log.time
+                pcm[pro_log.project_id]["phases"][pro_log.phase_id] += pro_log.time
+                total_worktime += pro_log.time
                 pro_id_set.add(pro_log.project_id)
 
-        pro_contribution_map = pro_contribution_map = dict(sorted(pro_contribution_map.items()))
+        pcm = dict(sorted(pcm.items()))
 
         # get relevant project colors
         pro_colors_results = (
@@ -294,12 +300,14 @@ class EmployeeService:
                 Project.id.in_(pro_id_set)
             ).all()
         )
-        pro_color_map = {
-            pro_id: pro_color for pro_id, pro_color in pro_colors_results
-        }
-
+        # apply colors and sum values
+        for pro_id, color in pro_colors_results:
+            pro = pcm[pro_id] 
+            pro["color"] = color
+            pro["total"] = sum(pro["phases"].values())
         return {
-            "meta": {},
-            "pros": pro_contribution_map,
-            "pro_colors": pro_color_map
+            "meta": {
+                "total": round(total_worktime)
+            },
+            "pros": pcm
         }
