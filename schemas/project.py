@@ -38,7 +38,7 @@ class ProjectDetailedSchema(BaseModel):
     active: bool
 
     total_hours: float = 0.0
-    timeline: dict[str, float] = {}
+    timeline: dict[date, float] = {}
     hours_per_emp: Dict[str, float] = {}
     emp_map: Dict[str, str] = {}
     
