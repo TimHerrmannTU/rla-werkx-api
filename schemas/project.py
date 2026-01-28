@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List, Dict
+from datetime import date, time
 
 class FlagSchema(BaseModel):
     id: str
@@ -37,7 +38,9 @@ class ProjectDetailedSchema(BaseModel):
     active: bool
 
     total_hours: float = 0.0
+    timeline: dict[str, float] = {}
     hours_per_emp: Dict[str, float] = {}
+    emp_map: Dict[str, str] = {}
     
     # Nested Lists (for detailed view)
     phases: List[PhaseSchema] = []
