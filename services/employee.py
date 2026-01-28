@@ -14,11 +14,17 @@ class EmployeeService:
         self.db = db
 
     def get_detailed(self, emp_id: str):
-        emp = self.db.query(Employee).options(
-            joinedload(Employee.hour_targets),
-            joinedload(Employee.vacation_claims)
-        ).filter(Employee.id == emp_id).first()
-        
+        emp = (
+            self.db.query(
+                Employee
+            ).options(
+                joinedload(Employee.hour_targets),
+                joinedload(Employee.vacation_claims)
+            ).filter(
+                Employee.id == emp_id
+            ).first()
+        )
+
         if not emp: return None # gate
         
         first_year = emp.first_work_year
@@ -30,10 +36,14 @@ class EmployeeService:
         for year in range(first_year, current_year + 1):
             if year not in year_lut:
                 seniority = year - first_year
-                rule = self.db.query(VacationRule).filter(
-                    VacationRule.min_years <= seniority,
-                    VacationRule.max_years >= seniority
-                ).first()
+                rule = (
+                    self.db.query(
+                        VacationRule
+                    ).filter(
+                        VacationRule.min_years <= seniority,
+                        VacationRule.max_years >= seniority
+                    ).first()
+                )
 
                 days = rule.days if rule else 0.0
                 claim_object = EmployeeVacationClaim(
@@ -46,7 +56,13 @@ class EmployeeService:
         return emp
 
     def get_lifetime_stats(self, emp_id: str, calc_end: date | None = None, pro_split: bool = False):
-        calc_start = self.db.query(Employee).filter(Employee.id == emp_id).first().start_tracking_date
+        calc_start = (
+            self.db.query(
+                Employee
+            ).filter(
+                Employee.id == emp_id
+            ).first()
+        ).start_tracking_date
         if calc_end is None: calc_end = date.today()
 
         days = (
@@ -137,34 +153,47 @@ class EmployeeService:
                 
     def get_month_view(self, emp_id: str, year: int, month: int):
         # Fetch Calendar Range (The Scaffold)
-        days = self.db.query(CalendarDay).options(
-            joinedload(CalendarDay.holiday)
-        ).filter(
-            extract('year', CalendarDay.date) == year,
-            extract('month', CalendarDay.date) == month
-        ).order_by(CalendarDay.date).all()
-
+        days = (
+            self.db.query(
+                CalendarDay
+            ).options(
+                joinedload(CalendarDay.holiday)
+            ).filter(
+                extract('year', CalendarDay.date) == year,
+                extract('month', CalendarDay.date) == month
+            ).order_by(
+                CalendarDay.date
+            ).all()
+        )
         # Fetch Logs
-        logs = self.db.query(LogDailySummary).options(
-            joinedload(LogDailySummary.project_hours),
-            joinedload(LogDailySummary.timeframes)
-        ).filter(
-            LogDailySummary.employee_id == emp_id,
-            extract('year', LogDailySummary.date) == year,
-            extract('month', LogDailySummary.date) == month
-        ).all()
+        logs = (
+            self.db.query(
+                LogDailySummary
+            ).options(
+                joinedload(LogDailySummary.project_hours),
+                joinedload(LogDailySummary.timeframes)
+            ).filter(
+                LogDailySummary.employee_id == emp_id,
+                extract('year', LogDailySummary.date) == year,
+                extract('month', LogDailySummary.date) == month
+            ).all()
+        )
 
         log_map = {l.date: l for l in logs}
 
         # Fetch active contract
         first_day_of_month = date(year, month, 1)
         
-        contract = self.db.query(EmployeeHourTarget).filter(
-            EmployeeHourTarget.employee_id == emp_id,
-            (EmployeeHourTarget.valid_start <= first_day_of_month) | (EmployeeHourTarget.valid_start == None),
-            (EmployeeHourTarget.valid_stop >= first_day_of_month) | (EmployeeHourTarget.valid_stop == None)
-        ).first()
-        
+        contract = (
+            self.db.query(
+                EmployeeHourTarget
+            ).filter(
+                EmployeeHourTarget.employee_id == emp_id,
+                (EmployeeHourTarget.valid_start <= first_day_of_month) | (EmployeeHourTarget.valid_start == None),
+                (EmployeeHourTarget.valid_stop >= first_day_of_month) | (EmployeeHourTarget.valid_stop == None)
+            ).first()
+        )
+
         # Merge
         day_list = []
         for day in days:
