@@ -6,6 +6,7 @@ from database import get_db
 
 from services.dashboard import DashboardService
 from services.project import ProjectService
+from services.employee import EmployeeService
 
 from schemas.project import ProjectDashboardSchema
 
@@ -19,9 +20,17 @@ def get_general(db: Session = Depends(get_db)):
     return service.get_general(start_date=start_date, end_date=end_date)
 
 @router.get("/project/{project_id}", response_model=ProjectDashboardSchema)
-def get_project_statistic(project_id: str, db: Session = Depends(get_db)):
+def get_project(project_id: str, db: Session = Depends(get_db)):
     service = ProjectService(db)
-    pro = service.get_project_statistics(project_id)
+    pro = service.get_dashboard(project_id)
+    if not pro:
+        raise HTTPException(404, "Project not found")
+    return pro
+
+@router.get("/employee/{emp_id}")
+def get_project(emp_id: str, db: Session = Depends(get_db)):
+    service = EmployeeService(db)
+    pro = service.get_dashboard(emp_id)
     if not pro:
         raise HTTPException(404, "Project not found")
     return pro

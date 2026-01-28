@@ -13,7 +13,7 @@ class ProjectService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_project_statistics(self, project_id: str):
+    def get_dashboard(self, project_id: str):
         # Fetch Base Project
         pro = self.db.query(Project).filter(Project.id == project_id).first()
         if not pro: return None

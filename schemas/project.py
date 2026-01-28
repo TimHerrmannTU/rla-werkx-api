@@ -6,21 +6,28 @@ class FlagSchema(BaseModel):
     id: str
     name: str
     color: Optional[str] = None
-    time_budget: Optional[float] = None
-
-    total_hours: float = 0.0
-    hours_per_emp: Dict[str, float] = {}
     
     class Config: from_attributes = True
+
+class FlagDetailedSchema(FlagSchema):
+    time_budget: Optional[float] = None
+    total_hours: float = 0.0
+    hours_per_emp: Dict[str, float] = {}
+
+    class Config: from_attributes = True
+
 
 class PhaseSchema(BaseModel):
     id: str
     name: str
     phase: Optional[str] = None
     
+    class Config: from_attributes = True
+
+class PhaseDetailedSchema(PhaseSchema):
     total_hours: float = 0.0
     hours_per_emp: Dict[str, float] = {}
-
+    
     class Config: from_attributes = True
 
 class ProjectSchema(BaseModel):
@@ -31,13 +38,18 @@ class ProjectSchema(BaseModel):
     
     class Config:from_attributes = True
 
+
 class ProjectDetailedSchema(ProjectSchema):
     phases: List[PhaseSchema] = []
     flags: List[FlagSchema] = []
     
     class Config:from_attributes = True
 
-class ProjectDashboardSchema(ProjectDetailedSchema):
+
+class ProjectDashboardSchema(ProjectSchema):
+    phases: List[PhaseDetailedSchema] = []
+    flags: List[FlagDetailedSchema] = []
+
     total_hours: float = 0.0
     timeline: dict[date, float] = {}
     hours_per_emp: Dict[str, float] = {}
