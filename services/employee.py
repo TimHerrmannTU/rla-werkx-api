@@ -1,11 +1,13 @@
 import calendar
 from datetime import date
+from collections import defaultdict
 
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import extract
 from models.log import LogDailySummary
 from models.calendar import CalendarDay
 
+from models.project import Project
 from models.employee import Employee, EmployeeHourTarget, EmployeeVacationClaim
 from models.config import VacationRule
 
@@ -274,8 +276,30 @@ class EmployeeService:
         ###################
         # DATA CONVERSION #
         ###################
-        pro_contribution_map = {}
-        for pro_log in logs.project_hours:
-            pro_contribution_map[pro_log.phase_id] += pro_log.time
+        pro_contribution_map = defaultdict(float)
+        pro_id_set = set()
+        for log in logs:
+            for pro_log in log.project_hours:
+                pro_contribution_map[pro_log.phase_id] += pro_log.time
+                pro_id_set.add(pro_log.project_id)
 
-        return pro_contribution_map
+        pro_contribution_map = pro_contribution_map = dict(sorted(pro_contribution_map.items()))
+
+        # get relevant project colors
+        pro_colors_results = (
+            self.db.query(
+                Project.id,
+                Project.color
+            ).filter(
+                Project.id.in_(pro_id_set)
+            ).all()
+        )
+        pro_color_map = {
+            pro_id: pro_color for pro_id, pro_color in pro_colors_results
+        }
+
+        return {
+            "meta": {},
+            "pros": pro_contribution_map,
+            "pro_colors": pro_color_map
+        }
