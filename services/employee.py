@@ -55,7 +55,8 @@ class EmployeeService:
         emp.vacation_claims = final_claims
         return emp
 
-    def get_lifetime_stats(self, emp_id: str, calc_end: date | None = None, pro_split: bool = False):
+    def get_lifetime_stats(self, emp_id: str, calc_end: date | None = None):
+        # fetch tracking start of employee to calc target factor
         calc_start = (
             self.db.query(
                 Employee
@@ -64,7 +65,7 @@ class EmployeeService:
             ).first()
         ).start_tracking_date
         if calc_end is None: calc_end = date.today()
-
+        # get all days the employee was at the company
         days = (
             self.db.query(
                 CalendarDay
@@ -77,7 +78,7 @@ class EmployeeService:
                 CalendarDay.date
             ).all()
         )
-
+        # fetch all employee contracts (how much time did they need to work?)
         contracts = (
             self.db.query(
                 EmployeeHourTarget
@@ -85,8 +86,7 @@ class EmployeeService:
                 EmployeeHourTarget.employee_id == emp_id
             ).all()
         )
-
-        # Fetch Logs
+        # Fetch all logs with their work time entries
         logs = (
             self.db.query(
                 LogDailySummary
@@ -100,6 +100,7 @@ class EmployeeService:
         )
         log_map = {l.date: l for l in logs}
 
+        # worktime summation
         actual_sum = 0.0
         for log in logs: actual_sum += sum(p.time for p in log.project_hours)
 
@@ -242,3 +243,39 @@ class EmployeeService:
             },
             "days": day_list
         }
+    
+    def get_dashboard(self, emp_id: str, calc_end: date | None = None):
+
+        ############
+        # QUERY DB #
+        ############
+        # fetch tracking start of employee to calc target factor
+        calc_start = (
+            self.db.query(
+                Employee
+            ).filter(
+                Employee.id == emp_id
+            ).first()
+        ).start_tracking_date
+        if calc_end is None: calc_end = date.today()
+        # fetch all project logs of employee
+        logs = (
+            self.db.query(
+                LogDailySummary
+            ).options(
+                joinedload(LogDailySummary.project_hours),
+            ).filter(
+                LogDailySummary.employee_id == emp_id,
+                LogDailySummary.date >= calc_start,
+                LogDailySummary.date < calc_end
+            ).all()
+        )
+
+        ###################
+        # DATA CONVERSION #
+        ###################
+        pro_contribution_map = {}
+        for pro_log in logs.project_hours:
+            pro_contribution_map[pro_log.phase_id] += pro_log.time
+
+        return pro_contribution_map

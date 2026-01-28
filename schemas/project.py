@@ -31,19 +31,16 @@ class ProjectSchema(BaseModel):
     
     class Config:from_attributes = True
 
-class ProjectDetailedSchema(BaseModel):
-    id: str
-    name: str
-    description: Optional[str] = None
-    active: bool
+class ProjectDetailedSchema(ProjectSchema):
+    phases: List[PhaseSchema] = []
+    flags: List[FlagSchema] = []
+    
+    class Config:from_attributes = True
 
+class ProjectDashboardSchema(ProjectDetailedSchema):
     total_hours: float = 0.0
     timeline: dict[date, float] = {}
     hours_per_emp: Dict[str, float] = {}
     emp_map: Dict[str, str] = {}
-    
-    # Nested Lists (for detailed view)
-    phases: List[PhaseSchema] = []
-    flags: List[FlagSchema] = []
     
     class Config:from_attributes = True

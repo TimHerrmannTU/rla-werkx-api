@@ -10,7 +10,7 @@ class DashboardService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_project_stats(self, start_date: date, end_date: date, include_internal: bool = False):
+    def get_general(self, start_date: date, end_date: date, include_internal: bool = False):
         payload = {}
 
         def apply_scope(query, s: date = start_date, e: date = end_date): # applys filters to all queries
