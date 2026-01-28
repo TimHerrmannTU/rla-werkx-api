@@ -45,29 +45,43 @@ class EmployeeService:
         emp.vacation_claims = final_claims
         return emp
 
-    def get_lifetime_stats(self, emp_id: str, calc_end: date | None = None):
+    def get_lifetime_stats(self, emp_id: str, calc_end: date | None = None, pro_split: bool = False):
         calc_start = self.db.query(Employee).filter(Employee.id == emp_id).first().start_tracking_date
         if calc_end is None: calc_end = date.today()
 
-        days = self.db.query(CalendarDay).options(
-            joinedload(CalendarDay.holiday)
-        ).filter(
-            CalendarDay.date >= calc_start,
-            CalendarDay.date < calc_end
-        ).order_by(CalendarDay.date).all()
+        days = (
+            self.db.query(
+                CalendarDay
+            ).options(
+                joinedload(CalendarDay.holiday)
+            ).filter(
+                CalendarDay.date >= calc_start,
+                CalendarDay.date < calc_end
+            ).order_by(
+                CalendarDay.date
+            ).all()
+        )
 
-        contracts = self.db.query(EmployeeHourTarget).filter(
-            EmployeeHourTarget.employee_id == emp_id
-        ).all()
+        contracts = (
+            self.db.query(
+                EmployeeHourTarget
+            ).filter(
+                EmployeeHourTarget.employee_id == emp_id
+            ).all()
+        )
 
         # Fetch Logs
-        logs = self.db.query(LogDailySummary).options(
-            joinedload(LogDailySummary.project_hours),
-        ).filter(
-            LogDailySummary.employee_id == emp_id,
-            LogDailySummary.date >= calc_start,
-            LogDailySummary.date < calc_end
-        ).all()
+        logs = (
+            self.db.query(
+                LogDailySummary
+            ).options(
+                joinedload(LogDailySummary.project_hours),
+            ).filter(
+                LogDailySummary.employee_id == emp_id,
+                LogDailySummary.date >= calc_start,
+                LogDailySummary.date < calc_end
+            ).all()
+        )
         log_map = {l.date: l for l in logs}
 
         actual_sum = 0.0
