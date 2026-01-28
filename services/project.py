@@ -27,27 +27,28 @@ class ProjectService:
                 LogDailySummary.date,
                 LogDailySummary.employee_id,
                 func.sum(LogProjectHour.time)
-            )
-            .join(
+            ).join(
                 LogDailySummary, 
                 LogProjectHour.daily_entry_id == LogDailySummary.id
-            )
-            .filter(LogProjectHour.project_id == project_id)
-            .group_by(
+            ).filter(
+                LogProjectHour.project_id == project_id
+            ).group_by(
                 LogProjectHour.phase_id, 
                 LogProjectHour.flag_id,
                 LogDailySummary.date,
                 LogDailySummary.employee_id,
-            )
-            .all()
+            ).all()
         )
 
         # add emp map to payload
         unique_emp_ids = {row.employee_id for row in stats if row.employee_id}
         emp_rows = (
-            self.db.query(Employee.id, Employee.name)
-            .filter(Employee.id.in_(unique_emp_ids))
-            .all()
+            self.db.query(
+                Employee.id, 
+                Employee.name
+            ).filter(
+                Employee.id.in_(unique_emp_ids)
+            ).all()
         )
         pro.emp_map = {e.id: e.name for e in emp_rows}
 

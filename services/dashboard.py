@@ -33,12 +33,15 @@ class DashboardService:
                 self.db.query(
                     LogProjectHour.project_id, 
                     func.sum(LogProjectHour.time)
-                ).join(LogDailySummary)
+                ).join(
+                    LogDailySummary
+                )
             )
             results = (
                 apply_scope(query, s, e)
-                    .group_by(LogProjectHour.project_id)
-                    .all()
+                    .group_by(
+                        LogProjectHour.project_id
+                    ).all()
             )
             return {pid: float(hours) for pid, hours in results}
         
@@ -78,10 +81,12 @@ class DashboardService:
                 self.db.query(
                     date_to_key,
                     func.sum(LogProjectHour.time)
-                ).join(LogDailySummary)
-            )
-            .group_by(date_to_key)
-            .all()
+                ).join(
+                    LogDailySummary
+                )
+            ).group_by(
+                date_to_key
+            ).all()
         )
         total_worked_timeframe = round(sum(hours for _, hours in monthly_totals_query))
         payload["total_worked_company"] = {
@@ -97,12 +102,17 @@ class DashboardService:
                     LogProjectHour.project_id,
                     date_to_key,
                     func.sum(LogProjectHour.time)
-                ).join(LogDailySummary)
-            )
-            .filter(LogProjectHour.project_id.in_(top_ids))
-            .group_by(LogProjectHour.project_id, date_to_key)
-            .order_by(date_to_key)
-            .all()
+                ).join(
+                    LogDailySummary
+                )
+            ).filter(
+                LogProjectHour.project_id.in_(top_ids)
+            ).group_by(
+                LogProjectHour.project_id,
+                date_to_key
+            ).order_by(
+                date_to_key
+            ).all()
         )
         
         all_months = set()
@@ -137,13 +147,17 @@ class DashboardService:
                 self.db.query(
                     ProjectPhase.phase, 
                     func.sum(LogProjectHour.time)
+                ).join(
+                    LogProjectHour, 
+                    LogProjectHour.phase_id == ProjectPhase.id
+                ).join(
+                    LogDailySummary
                 )
-                .join(LogProjectHour, LogProjectHour.phase_id == ProjectPhase.id)
-                .join(LogDailySummary)
-            )
-            .group_by(ProjectPhase.phase)
-            .order_by(ProjectPhase.phase)
-            .all()
+            ).group_by(
+                ProjectPhase.phase
+            ).order_by(
+                ProjectPhase.phase
+            ).all()
         )
 
         total_hours = sum(hours or 0 for _, hours in phase_query)
@@ -161,9 +175,12 @@ class DashboardService:
         # PROJECT COLORS #
         ##################
         pro_color_results = (
-            self.db.query(Project.id, Project.color)
-                .filter(Project.id.in_(top_ids))
-                .all()
+            self.db.query(
+                Project.id,
+                Project.color
+            ).filter(
+                Project.id.in_(top_ids)
+            ).all()
         )
         payload["pro_colors"] = {id: color for id, color in pro_color_results}
 
