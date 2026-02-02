@@ -12,7 +12,9 @@ class Project(Base):
     color = Column(String(50))
     active = Column(Boolean)
     creation_date = Column(Date, nullable=True)
-
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
+    
+    team = relationship("Team", back_populates="projects")
     phases = relationship("ProjectPhase", back_populates="project")
     flags = relationship("ProjectFlag", back_populates="project")
     partials = relationship("ProjectPartial", back_populates="project")

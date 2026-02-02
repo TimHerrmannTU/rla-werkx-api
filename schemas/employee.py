@@ -12,9 +12,11 @@ from schemas.team import TeamRead
 class EmployeeRead(BaseModel):
     id: str
     name: str
+    email: Optional[str] = None
     birthday: Optional[date]
     entry_date: Optional[date]
     location: LocationRead
+    team_id: Optional[int] = None
     team_led: List[TeamRead] = []
     color: str
     active: bool

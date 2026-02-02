@@ -7,9 +7,10 @@ class Employee(Base):
 
     id = Column(String(5), primary_key=True) 
     name = Column(String(100))
-    password_hash = Column(String(255))
+    email = Column(String(255), unique=True)
     
     color = Column(String(7))
+    
     birthday = Column(Date)
     entry_date = Column(Date)
     exit_date = Column(Date, nullable=True)
@@ -18,9 +19,11 @@ class Employee(Base):
     active = Column(Boolean, default=True)
 
     location_id = Column(Integer, ForeignKey("locations.id"))
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
 
     # Relationships
-    team_led = relationship("Team", back_populates="lead")
+    team = relationship("Team", back_populates="members", foreign_keys=[team_id])
+    team_led = relationship("Team", back_populates="lead", foreign_keys="[Team.lead_id]")
     location = relationship("Location", back_populates="employees")
     hour_targets = relationship("EmployeeHourTarget", back_populates="employee")
     vacation_claims = relationship("EmployeeVacationClaim", back_populates="employee")
