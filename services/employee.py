@@ -11,10 +11,6 @@ from models.project import Project
 from models.employee import Employee, EmployeeHourTarget, EmployeeVacationClaim
 from models.config import VacationRule
 
-def get_employee_id_map(db: Session) -> dict:
-    results = db.query(Employee.id, Employee.name).all()
-    return {r.id: r.name for r in results}
-
 def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
     emp = (
         db.query(Employee)
@@ -26,7 +22,7 @@ def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
         .first()
     )
 
-    if not emp: return None // gate
+    if not emp: return None # gate
     
     first_year = emp.first_work_year
     current_year = date.today().year

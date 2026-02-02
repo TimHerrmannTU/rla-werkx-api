@@ -5,6 +5,39 @@ from datetime import date
 from schemas.location import LocationRead
 from schemas.team import TeamRead
 
+#################
+# BASE EMPLOYEE #
+#################
+
+class EmployeeRead(BaseModel):
+    id: str
+    name: str
+    birthday: Optional[date]
+    entry_date: Optional[date]
+    location: LocationRead
+    team_led: List[TeamRead] = []
+    color: str
+    active: bool
+    
+    class Config: from_attributes = True
+
+class EmployeeCreate(BaseModel):
+    id: str
+    name: str
+    birthday: Optional[date] = None
+    entry_date: Optional[date] = None
+    location_id: int
+    color: str = "#ffffff"
+    active: bool = True
+
+class EmployeeUpdate(BaseModel):
+    name: Optional[str] = None
+    birthday: Optional[date] = None
+    entry_date: Optional[date] = None
+    location_id: Optional[int] = None
+    color: Optional[str] = None
+    active: Optional[bool] = None
+
 class ContractRead(BaseModel):
     weekly_target: float
     target_spread: List[float] # [1.0, 1.0...]
@@ -20,17 +53,9 @@ class HolidayClaimRead(BaseModel):
     
     class Config: from_attributes = True
 
-class EmployeeRead(BaseModel):
-    id: str
-    name: str
-    birthday: Optional[date]
-    entry_date: Optional[date]
-    location: LocationRead
-    team_led: List[TeamRead] = []
-    color: str
-    active: bool
-    
-    class Config: from_attributes = True
+#########
+# VIEWS #
+#########
 
 class EmployeeDetailedView(BaseModel):
     id: str

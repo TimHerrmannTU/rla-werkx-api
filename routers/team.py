@@ -11,7 +11,6 @@ router = APIRouter(prefix="/teams", tags=["teams"])
 
 @router.get("/", response_model=list[TeamRead])
 def get_team_list(db: Session = Depends(get_db)):
-    """Default: Returns essential data only (Base)."""
     return team_crud.get_all(db)
 
 @router.get("/{team_id}", response_model=TeamRead)
@@ -33,7 +32,7 @@ def update_existing_team(team_id: int, team_in: TeamUpdate, db: Session = Depend
 
 @router.delete("/{team_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_team(team_id: int, db: Session = Depends(get_db)):
-    success = team_crud.delete_team(db, team_id)
+    success = team_crud.delete(db, team_id)
     if not success:
         raise HTTPException(status_code=404, detail="Team not found")
     return None

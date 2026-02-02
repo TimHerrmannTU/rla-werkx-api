@@ -23,7 +23,7 @@ def update(db: Session, db_obj: Team, schema: TeamUpdate):
     db.refresh(db_obj)
     return db_obj
 
-def delete_team(db: Session, team_id: int):
+def delete(db: Session, team_id: int):
     db_obj = db.query(Team).filter(Team.id == team_id).first()
     if db_obj:
         db.delete(db_obj)

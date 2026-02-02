@@ -13,7 +13,6 @@ router = APIRouter(prefix="/projects", tags=["Projects"])
 
 @router.get("/", response_model=list[ProjectRead])
 def get_project_list_short(db: Session = Depends(get_db)):
-    """Default: Returns essential data only (Base)."""
     return db.query(Project).order_by(Project.id).all()
 
 @router.get("/detailed", response_model=list[ProjectDetailedView])
