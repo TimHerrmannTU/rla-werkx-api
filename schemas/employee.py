@@ -5,9 +5,9 @@ from datetime import date
 from schemas.location import LocationRead
 from schemas.team import TeamRead
 
-#################
-# BASE EMPLOYEE #
-#################
+################
+# CRUD SCHEMAS #
+################
 
 class EmployeeRead(BaseModel):
     id: str
@@ -53,9 +53,9 @@ class HolidayClaimRead(BaseModel):
     
     class Config: from_attributes = True
 
-#########
-# VIEWS #
-#########
+################
+# VIEW SCHEMAS #
+################
 
 class EmployeeDetailedView(BaseModel):
     id: str
