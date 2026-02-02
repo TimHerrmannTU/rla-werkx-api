@@ -3,9 +3,6 @@ from sqlalchemy.orm import Session, joinedload
 from database import get_db
 
 from models.project import Project
-
-from services.project import ProjectService
-
 from schemas.project import ProjectRead, ProjectDetailedView
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
