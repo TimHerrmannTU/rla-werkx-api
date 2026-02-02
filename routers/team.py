@@ -2,18 +2,38 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
-from schemas.team import TeamCreate, TeamRead, TeamUpdate
-from services import team
+
+from models import Team
+from schemas.team import TeamRead, TeamCreate, TeamRead, TeamUpdate
+import crud.team as team_crud
 
 router = APIRouter(prefix="/teams", tags=["teams"])
 
+@router.get("/", response_model=list[TeamRead])
+def get_team_list(db: Session = Depends(get_db)):
+    """Default: Returns essential data only (Base)."""
+    return db.query(Team).order_by(Team.id).all()
+
+@router.get("/{team_id}", response_model=TeamRead)
+def get_team_single(team_id: int, db: Session = Depends(get_db)):
+    team = db.query(Team).filter(Team.id == team_id).first()
+    if not team: raise HTTPException(404, "Project not found")
+    return team
+
 @router.post("/", response_model=TeamRead, status_code=status.HTTP_201_CREATED)
 def create_new_team(team_in: TeamCreate, db: Session = Depends(get_db)):
-    return team.create_team(db, team_in)
+    return team_crud.get(db, team_in)
 
 @router.patch("/{team_id}", response_model=TeamRead)
 def update_existing_team(team_id: int, team_in: TeamUpdate, db: Session = Depends(get_db)):
-    team = team.update_team(db, team_id, team_in)
+    team = team_crud.update(db, team_id, team_in)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     return team
+
+@router.delete("/{team_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_team(team_id: int, db: Session = Depends(get_db)):
+    success = team_crud.delete_team(db, team_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return None
