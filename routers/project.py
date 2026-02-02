@@ -8,7 +8,7 @@ from schemas.project import ProjectRead, ProjectDetailedView
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
 ##################
-# LIST ENDPOINTS #
+# CRUD ENDPOINTS #
 ##################
 
 @router.get("/", response_model=list[ProjectRead])
@@ -46,3 +46,7 @@ def get_project_single_long(project_id: str, db: Session = Depends(get_db)):
     
     if not pro: raise HTTPException(404, "Project not found")
     return pro
+
+##################
+# VIEW ENDPOINTS #
+##################

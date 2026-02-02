@@ -1,4 +1,3 @@
-# routers/teams.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
@@ -8,6 +7,10 @@ from schemas.team import TeamRead, TeamCreate, TeamRead, TeamUpdate
 import crud.team as team_crud
 
 router = APIRouter(prefix="/teams", tags=["teams"])
+
+##################
+# CRUD ENDPOINTS #
+##################
 
 @router.get("/", response_model=list[TeamRead])
 def get_team_list(db: Session = Depends(get_db)):
@@ -36,3 +39,7 @@ def delete_team(team_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="Team not found")
     return None
+
+##################
+# VIEW ENDPOINTS #
+##################
