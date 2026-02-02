@@ -7,7 +7,7 @@ from sqlalchemy import extract, func
 from models.project import Project, ProjectPhase
 from models.log import LogDailySummary, LogProjectHour
 
-def get_general_dashboard(
+def get_general(
     db: Session, 
     start_date: date, 
     end_date: date, 

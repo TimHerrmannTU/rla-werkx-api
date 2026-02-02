@@ -199,7 +199,7 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
         "days": day_list
     }
 
-def get_employee_dashboard(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Dict:
+def get_dashboard(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Dict:
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
     if not emp: return {"meta": {"total": 0}, "pros": {}}
 

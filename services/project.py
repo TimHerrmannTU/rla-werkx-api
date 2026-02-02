@@ -33,7 +33,7 @@ def _inject_stats(items: List, stats_map: Dict):
 # SERVICES #
 ############
 
-def get_project_dashboard(db: Session, project_id: str) -> Optional[Project]:
+def get_dashboard(db: Session, project_id: str) -> Optional[Project]:
     pro = db.query(Project).filter(Project.id == project_id).first()
     if not pro: return None
 
