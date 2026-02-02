@@ -1,19 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from models import (
-    calendar,
-    location,
-    employee,
-    log,
-    project
-)
-
-from routers import (
-    project,
-    employee,
-    dashboard
-)
+from models import * 
+from routers import *
 
 # Initialize the App
 app = FastAPI(title="WerkX API")

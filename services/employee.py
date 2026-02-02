@@ -279,7 +279,7 @@ class EmployeeService:
         pcm = defaultdict(lambda: {
             "phases": defaultdict(float), 
             "total": 0,
-            "color": "#000000" 
+            "color": "#cccccc" 
         })
         pro_id_set = set()
         total_worktime = 0
@@ -303,7 +303,8 @@ class EmployeeService:
         # apply colors and sum values
         for pro_id, color in pro_colors_results:
             pro = pcm[pro_id] 
-            pro["color"] = color
+            if color:
+                pro["color"] = color
             pro["total"] = sum(pro["phases"].values())
         return {
             "meta": {
