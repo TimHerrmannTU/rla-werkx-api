@@ -1,31 +1,9 @@
-from sqlalchemy.orm import Session
+# crud/team.py
 from models.team import Team
 from schemas.team import TeamCreate, TeamUpdate
+from .base import CRUDBase
 
-def get_all(db: Session):
-    return db.query(Team).order_by(Team.id).all()
+class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
+    pass
 
-def get(db: Session, team_id: int):
-    return db.query(Team).filter(Team.id == team_id).first()
-
-def create(db: Session, schema: TeamCreate):
-    db_obj = Team(**schema.model_dump())
-    db.add(db_obj)
-    db.commit()
-    db.refresh(db_obj)
-    return db_obj
-
-def update(db: Session, db_obj: Team, schema: TeamUpdate):
-    data = schema.model_dump(exclude_unset=True)
-    for field in data:
-        setattr(db_obj, field, data[field])
-    db.commit()
-    db.refresh(db_obj)
-    return db_obj
-
-def delete(db: Session, team_id: int):
-    db_obj = db.query(Team).filter(Team.id == team_id).first()
-    if db_obj:
-        db.delete(db_obj)
-        db.commit()
-    return db_obj
+team_crud = CRUDTeam(Team)

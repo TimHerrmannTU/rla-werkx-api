@@ -1,4 +1,3 @@
-# crud/log.py
 from sqlalchemy.orm import Session
 from models.log import LogDailySummary, LogProjectHour, LogTimeframe
 from schemas.log import DailyLogSync
