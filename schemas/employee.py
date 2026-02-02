@@ -3,6 +3,7 @@ from typing import Optional, List, Any
 from datetime import date
 
 from schemas.location import LocationRead
+from schemas.team import TeamRead
 
 class ContractRead(BaseModel):
     weekly_target: float
@@ -25,6 +26,7 @@ class EmployeeRead(BaseModel):
     birthday: Optional[date]
     entry_date: Optional[date]
     location: LocationRead
+    team_led: List[TeamRead] = []
     color: str
     active: bool
     
