@@ -13,7 +13,10 @@ class ProjectRead(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
+    color: Optional[str] = None
     active: bool
+    creation_date: Optional[date] = None
+    team_id: Optional[int] = None
     
     class Config: from_attributes = True
 
@@ -21,12 +24,18 @@ class ProjectCreate(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
+    color: Optional[str] = None
     active: bool = True
+    creation_date: Optional[date] = None
+    team_id: Optional[int] = None
 
 class ProjectUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    color: Optional[str] = None
     active: Optional[bool] = None
+    creation_date: Optional[date] = None
+    team_id: Optional[int] = None
 
 ################
 # VIEW SCHEMAS #

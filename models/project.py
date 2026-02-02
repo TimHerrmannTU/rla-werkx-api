@@ -8,10 +8,11 @@ class Project(Base):
     __tablename__ = "projects"
     
     id = Column(String(50), primary_key=True)
+    creation_date = Column(Date, nullable=True)
+    
     name = Column(String(255))
     color = Column(String(50))
     active = Column(Boolean)
-    creation_date = Column(Date, nullable=True)
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
     
     team = relationship("Team", back_populates="projects")
