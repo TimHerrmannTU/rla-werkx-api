@@ -12,11 +12,11 @@ router = APIRouter(prefix="/teams", tags=["teams"])
 @router.get("/", response_model=list[TeamRead])
 def get_team_list(db: Session = Depends(get_db)):
     """Default: Returns essential data only (Base)."""
-    return db.query(Team).order_by(Team.id).all()
+    return team_crud.get_all(db)
 
 @router.get("/{team_id}", response_model=TeamRead)
 def get_team_single(team_id: int, db: Session = Depends(get_db)):
-    team = db.query(Team).filter(Team.id == team_id).first()
+    team = team_crud.get(db, team_id)
     if not team: raise HTTPException(404, "Project not found")
     return team
 

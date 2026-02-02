@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 from models.team import Team
 from schemas.team import TeamCreate, TeamUpdate
 
+def get_all(db: Session):
+    return db.query(Team).order_by(Team.id).all()
+
 def get(db: Session, team_id: int):
     return db.query(Team).filter(Team.id == team_id).first()
 
