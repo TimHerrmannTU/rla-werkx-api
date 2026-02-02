@@ -9,7 +9,7 @@ class Employee(Base):
     name = Column(String(100))
     password_hash = Column(String(255))
     
-    color = Column(String)
+    color = Column(String(7))
     birthday = Column(Date)
     entry_date = Column(Date)
     exit_date = Column(Date, nullable=True)
