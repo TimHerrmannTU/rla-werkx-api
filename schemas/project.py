@@ -2,14 +2,14 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict
 from datetime import date, time
 
-class FlagSchema(BaseModel):
+class FlagRead(BaseModel):
     id: str
     name: str
     color: Optional[str] = None
     
     class Config: from_attributes = True
 
-class FlagDetailedSchema(FlagSchema):
+class FlagDetailedView(FlagRead):
     time_budget: Optional[float] = None
     total_hours: float = 0.0
     hours_per_emp: Dict[str, float] = {}
@@ -17,20 +17,20 @@ class FlagDetailedSchema(FlagSchema):
     class Config: from_attributes = True
 
 
-class PhaseSchema(BaseModel):
+class PhaseRead(BaseModel):
     id: str
     name: str
     phase: Optional[str] = None
     
     class Config: from_attributes = True
 
-class PhaseDetailedSchema(PhaseSchema):
+class PhaseDetailedView(PhaseRead):
     total_hours: float = 0.0
     hours_per_emp: Dict[str, float] = {}
     
     class Config: from_attributes = True
 
-class ProjectSchema(BaseModel):
+class ProjectRead(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
@@ -39,16 +39,16 @@ class ProjectSchema(BaseModel):
     class Config:from_attributes = True
 
 
-class ProjectDetailedSchema(ProjectSchema):
-    phases: List[PhaseSchema] = []
-    flags: List[FlagSchema] = []
+class ProjectDetailedView(ProjectRead):
+    phases: List[PhaseRead] = []
+    flags: List[FlagRead] = []
     
     class Config:from_attributes = True
 
 
-class ProjectDashboardSchema(ProjectSchema):
-    phases: List[PhaseDetailedSchema] = []
-    flags: List[FlagDetailedSchema] = []
+class ProjectDashboardView(ProjectRead):
+    phases: List[PhaseDetailedView] = []
+    flags: List[FlagDetailedView] = []
 
     total_hours: float = 0.0
     timeline: dict[date, float] = {}

@@ -8,12 +8,12 @@ from models.employee import Employee
 
 from services.employee import EmployeeService
 
-from schemas.employee import EmployeeSchema, EmployeeDetailedSchema
-from schemas.log import MonthViewSchema
+from schemas.employee import EmployeeRead, EmployeeDetailedView
+from schemas.log import MonthView
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
-@router.get("/", response_model=list[EmployeeSchema])
+@router.get("/", response_model=list[EmployeeRead])
 def get_employees(db: Session = Depends(get_db)):
     return db.query(Employee).all()
 
@@ -22,7 +22,7 @@ def get_employee_id_name_map(db: Session = Depends(get_db)):
     service = EmployeeService(db)
     return service.get_id_map()
 
-@router.get("/{emp_id}", response_model=EmployeeDetailedSchema)
+@router.get("/{emp_id}", response_model=EmployeeDetailedView)
 def get_employee_short(emp_id: str, db: Session = Depends(get_db)):
     """Default: Single project essential data."""
     service = EmployeeService(db)
@@ -30,7 +30,7 @@ def get_employee_short(emp_id: str, db: Session = Depends(get_db)):
     if not emp: raise HTTPException(404, "Not found")
     return emp
 
-@router.get("/{emp_id}/{year}/{month}", response_model=MonthViewSchema)
+@router.get("/{emp_id}/{year}/{month}", response_model=MonthView)
 def get_employee_month(emp_id: str, year: int, month: int, db: Session = Depends(get_db)):
     service = EmployeeService(db)
     return service.get_month_view(emp_id, year, month)

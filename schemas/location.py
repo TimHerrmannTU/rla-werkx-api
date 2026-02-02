@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Any
 from datetime import date
 
-class LocationSchema(BaseModel):
+class LocationRead(BaseModel):
     id: int
     name: str
 

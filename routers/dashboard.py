@@ -8,7 +8,7 @@ from services.dashboard import DashboardService
 from services.project import ProjectService
 from services.employee import EmployeeService
 
-from schemas.project import ProjectDashboardSchema
+from schemas.project import ProjectDashboardView
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -19,7 +19,7 @@ def get_general(db: Session = Depends(get_db)):
     service = DashboardService(db)
     return service.get_general(start_date=start_date, end_date=end_date)
 
-@router.get("/project/{project_id}", response_model=ProjectDashboardSchema)
+@router.get("/project/{project_id}", response_model=ProjectDashboardView)
 def get_project(project_id: str, db: Session = Depends(get_db)):
     service = ProjectService(db)
     pro = service.get_dashboard(project_id)

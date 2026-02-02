@@ -2,15 +2,15 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, time
 
-from schemas.calendar import CalendarDaySchema
+from schemas.calendar import CalendarDayRead
 
-class TimeframeSchema(BaseModel):
+class TimeframeRead(BaseModel):
     start: Optional[time]
     stop: Optional[time]
 
     class Config: from_attributes = True
 
-class ProjectLogSchema(BaseModel):
+class ProjectLogRead(BaseModel):
     id: int
     time: float
     project_id: str
@@ -20,9 +20,9 @@ class ProjectLogSchema(BaseModel):
     
     class Config: from_attributes = True
 
-class DailyViewSchema(BaseModel):
+class DailyView(BaseModel):
     date: date
-    meta: CalendarDaySchema # Nested Calendar Data
+    meta: CalendarDayRead # Nested Calendar Data
     
     status: str
     status_target_factor: float
@@ -31,12 +31,12 @@ class DailyViewSchema(BaseModel):
     target_hours: float
     total_hours: float
     
-    project_hours: List[ProjectLogSchema] = []
-    timeframes_work: List[TimeframeSchema] = []
-    timeframes_break: List[TimeframeSchema] = []
+    project_hours: List[ProjectLogRead] = []
+    timeframes_work: List[TimeframeRead] = []
+    timeframes_break: List[TimeframeRead] = []
 
     class Config: from_attributes = True
 
-class MonthViewSchema(BaseModel):
+class MonthView(BaseModel):
     meta: dict # Or specific MonthStats schema
-    days: List[DailyViewSchema]
+    days: List[DailyView]
