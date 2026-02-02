@@ -8,5 +8,5 @@ from .employeeVacationClaim import *
 
 from .team import *
 
-from .logging import *
+from .log import *
 from .dashboard import *

@@ -6,7 +6,7 @@ from models import Team
 from schemas.team import TeamRead, TeamCreate, TeamRead, TeamUpdate
 import crud.team as team_crud
 
-router = APIRouter(prefix="/teams", tags=["teams"])
+router = APIRouter(prefix="/teams", tags=["Teams"])
 
 ##################
 # CRUD ENDPOINTS #

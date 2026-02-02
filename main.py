@@ -24,5 +24,5 @@ app.include_router(employeeVacationClaim.router)
 
 app.include_router(team.router)
 
-app.include_router(logging.router)
+app.include_router(log.router)
 app.include_router(dashboard.router)
