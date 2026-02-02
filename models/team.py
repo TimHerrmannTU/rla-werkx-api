@@ -9,4 +9,4 @@ class Team(Base):
     name = Column(String(20))
     lead_id = Column(String(5), ForeignKey("employees.id"))
 
-    lead = relationship("Employee", back_populates="team_ed")
+    lead = relationship("Employee", back_populates="team_led")

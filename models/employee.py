@@ -20,7 +20,7 @@ class Employee(Base):
     location_id = Column(Integer, ForeignKey("locations.id"))
 
     # Relationships
-    team_led = relationship("Team", back_populates="lead_id")
+    team_led = relationship("Team", back_populates="lead")
     location = relationship("Location", back_populates="employees")
     hour_targets = relationship("EmployeeHourTarget", back_populates="employee")
     vacation_claims = relationship("EmployeeVacationClaim", back_populates="employee")
