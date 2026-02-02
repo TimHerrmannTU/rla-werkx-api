@@ -8,7 +8,7 @@ from services.project import ProjectService
 
 from schemas.project import ProjectSchema, ProjectDetailedSchema
 
-router = APIRouter(prefix="/api/projects", tags=["Projects"])
+router = APIRouter(prefix="/projects", tags=["Projects"])
 
 ##################
 # LIST ENDPOINTS #

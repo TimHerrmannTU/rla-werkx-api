@@ -11,7 +11,7 @@ from services.employee import EmployeeService
 from schemas.employee import EmployeeSchema, EmployeeDetailedSchema
 from schemas.log import MonthViewSchema
 
-router = APIRouter(prefix="/api/employees", tags=["Employees"])
+router = APIRouter(prefix="/employees", tags=["Employees"])
 
 @router.get("/", response_model=list[EmployeeSchema])
 def get_employees(db: Session = Depends(get_db)):

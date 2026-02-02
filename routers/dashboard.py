@@ -10,7 +10,7 @@ from services.employee import EmployeeService
 
 from schemas.project import ProjectDashboardSchema
 
-router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
+router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/")
 def get_general(db: Session = Depends(get_db)):
