@@ -17,7 +17,12 @@ app.add_middleware(
 app.include_router(project.router) 
 app.include_router(projectFlag.router) 
 app.include_router(projectPhase.router) 
+
 app.include_router(employee.router)
-app.include_router(dashboard.router)
+app.include_router(employeeHourTarget.router)
+app.include_router(employeeVacationClaim.router)
+
 app.include_router(team.router)
+
 app.include_router(logging.router)
+app.include_router(dashboard.router)
