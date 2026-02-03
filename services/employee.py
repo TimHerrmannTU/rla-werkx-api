@@ -60,8 +60,10 @@ def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[dat
     days = (
         db.query(CalendarDay)
         .options(joinedload(CalendarDay.holiday))
-        .filter(CalendarDay.date >= calc_start, CalendarDay.date < calc_end)
-        .order_by(CalendarDay.date)
+        .filter(
+            CalendarDay.date >= calc_start, 
+            CalendarDay.date < calc_end
+        ).order_by(CalendarDay.date)
         .all()
     )
     

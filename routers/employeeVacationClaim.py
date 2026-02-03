@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
 
-import crud.employeeVacationClaim as claim_crud
+from crud.employeeVacationClaim import claim_crud
 from schemas.employeeVacationClaim import EmployeeVacationClaimRead, EmployeeVacationClaimCreate, EmployeeVacationClaimUpdate
 
 router = APIRouter(prefix="/employees/{emp_id}/vacation-claims", tags=["Employee Vacation Claims"])

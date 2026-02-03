@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
 
-import crud.project as project_crud
+from crud.project import project_crud
 import services.project as project_service
 from schemas.project import ProjectRead, ProjectCreate, ProjectUpdate, ProjectDetailedView
 

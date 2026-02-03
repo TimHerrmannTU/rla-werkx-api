@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
 
-import crud.projectFlag as flag_crud
+from crud.projectFlag import flag_crud
 from schemas.projectFlag import FlagRead, FlagCreate, FlagUpdate
 
 # Nested prefix

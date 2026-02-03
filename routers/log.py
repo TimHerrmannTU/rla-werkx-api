@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 
 from schemas.log import MonthView, DailyLogRead, DailyLogSync
-import crud.log as log_crud
+from crud.log import log_crud
 import services.employee as employee_service
 
 router = APIRouter(prefix="/logs", tags=["Logs"])

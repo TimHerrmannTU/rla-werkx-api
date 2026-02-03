@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
-import crud.employeeHourTarget as target_crud
+
+from crud.employeeHourTarget import target_crud
 from schemas.employeeHourTarget import EmployeeHourTargetRead, EmployeeHourTargetCreate, EmployeeHourTargetUpdate
 
 router = APIRouter(prefix="/employees/{emp_id}/hour-targets", tags=["Employee Hour Targets"])

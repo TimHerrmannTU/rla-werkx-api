@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
 
-import crud.projectPhase as phase_crud
+from crud.projectPhase import phase_crud
 from schemas.projectPhase import PhaseRead, PhaseCreate, PhaseUpdate
 
 router = APIRouter(prefix="/projects/{project_id}/phases", tags=["Phases"])

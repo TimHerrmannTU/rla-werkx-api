@@ -4,7 +4,7 @@ from database import get_db
 
 from models import Team
 from schemas.team import TeamRead, TeamCreate, TeamRead, TeamUpdate
-import crud.team as team_crud
+from crud.team import team_crud
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
 

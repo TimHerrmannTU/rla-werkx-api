@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
 
-import crud.employee as employee_crud
+from crud.employee import employee_crud
 import services.employee as employee_service
 from schemas.employee import EmployeeRead, EmployeeCreate, EmployeeUpdate, EmployeeDetailedView
 
