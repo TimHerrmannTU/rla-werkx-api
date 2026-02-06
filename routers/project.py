@@ -1,4 +1,5 @@
-# routers/projects.py
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
@@ -9,13 +10,32 @@ from schemas.project import ProjectRead, ProjectCreate, ProjectUpdate, ProjectDe
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
+
+##################
+# VIEW ENDPOINTS #
+##################
+
+@router.get("/detailed", response_model=list[ProjectDetailedView])
+def get_project_list_long(db: Session = Depends(get_db), active: Optional[bool] = None):
+    pros = project_crud.get_detailed(db, active=active)
+    if not pros:
+        raise HTTPException(404, "Project not found")
+    return pros
+
+@router.get("/detailed/{project_id}/", response_model=ProjectDetailedView)
+def get_project_single_long(project_id: str, db: Session = Depends(get_db)):
+    pro = project_crud.get_detailed(db, project_id)
+    if not pro: 
+        raise HTTPException(404, "Project not found")
+    return pro
+
 ##################
 # CRUD ENDPOINTS #
 ##################
 
 @router.get("/", response_model=list[ProjectRead])
-def get_project_list(db: Session = Depends(get_db)):
-    pros =  project_crud.get_all(db)
+def get_project_list(db: Session = Depends(get_db), active: Optional[bool] = None):
+    pros =  project_crud.get_all(db, active=active)
     if not pros: 
         raise HTTPException(404, "Project not found")
     return pros
@@ -44,22 +64,3 @@ def delete_project(project_id: str, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(404, "Project not found")
     return None
-
-
-##################
-# VIEW ENDPOINTS #
-##################
-
-@router.get("/detailed/{project_id}/", response_model=ProjectDetailedView)
-def get_project_single_long(project_id: str, db: Session = Depends(get_db)):
-    pro = project_crud.get_detailed(db, project_id)
-    if not pro: 
-        raise HTTPException(404, "Project not found")
-    return pro
-
-@router.get("/detailed", response_model=list[ProjectDetailedView])
-def get_project_list_long(db: Session = Depends(get_db)):
-    pros = project_crud.get(db)
-    if not pros:
-        raise HTTPException(404, "Project not found")
-    return pros

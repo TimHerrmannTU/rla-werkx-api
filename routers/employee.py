@@ -15,7 +15,7 @@ router = APIRouter(prefix="/employees", tags=["Employees"])
 ##################
 
 @router.get("/", response_model=list[EmployeeRead])
-def get_employee_list(active: Optional[bool] = None, db: Session = Depends(get_db)):
+def get_employee_list(db: Session = Depends(get_db), active: Optional[bool] = None):
     return employee_crud.get_all(db, active=active)
 
 @router.get("/{emp_id}", response_model=EmployeeRead)

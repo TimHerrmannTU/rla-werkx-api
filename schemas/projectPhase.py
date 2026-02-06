@@ -8,7 +8,7 @@ from typing import Optional, Dict
 
 class PhaseRead(BaseModel):
     id: str
-    name: str
+    name: Optional[str] = None
     phase: Optional[str] = None
     
     class Config: from_attributes = True
