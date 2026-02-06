@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
@@ -13,8 +15,8 @@ router = APIRouter(prefix="/employees", tags=["Employees"])
 ##################
 
 @router.get("/", response_model=list[EmployeeRead])
-def get_employee_list(db: Session = Depends(get_db)):
-    return employee_crud.get_all(db)
+def get_employee_list(active: Optional[bool] = None, db: Session = Depends(get_db)):
+    return employee_crud.get_all(db, active=active)
 
 @router.get("/{emp_id}", response_model=EmployeeRead)
 def get_employee_single_short(emp_id: str, db: Session = Depends(get_db)):
