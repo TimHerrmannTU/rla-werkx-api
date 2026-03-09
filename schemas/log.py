@@ -27,6 +27,7 @@ class ProjectLogRead(BaseModel):
 class DailyLogRead(BaseModel):
     id: int
     date: date
+    meta: Optional[dict] = None
     employee_id: str
     status: str
     status_target_factor: float

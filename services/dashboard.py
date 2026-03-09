@@ -55,7 +55,7 @@ def get_general(
         pct = ((diff / prev_h) * 100) if prev_h > 0 else (100.0 if curr_h > 0 else 0.0)
         
         final_pros.append({
-            "pro_id": pid,
+            "id": pid,
             "hours": round(curr_h, 2),
             "trend_abs": round(diff, 2),
             "trend_pct": round(pct, 1)
@@ -113,7 +113,15 @@ def get_general(
     ]
 
     # Project Colors
-    pro_colors = db.query(Project.id, Project.color).filter(Project.id.in_(sorted_pids)).all()
-    payload["pro_colors"] = {id: color for id, color in pro_colors}
+    pro_colors = db.query(
+        Project.id, 
+        Project.name,
+        Project.color
+    ).filter(
+        Project.id.in_(sorted_pids)
+    ).all()
+    payload["pro_meta"] = {
+        id: {"color": color, "name": name} for id, name, color in pro_colors
+    }
 
     return payload

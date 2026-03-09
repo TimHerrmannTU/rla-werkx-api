@@ -3,6 +3,7 @@ from datetime import date
 from collections import defaultdict
 from typing import Optional, Tuple, List, Dict
 
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import extract
 from models.log import LogDailySummary
@@ -118,51 +119,49 @@ def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[dat
 
 def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> Dict:
     days = (
-        db.query(CalendarDay)
-        .options(joinedload(CalendarDay.holiday))
-        .filter(
+        db.query(
+            CalendarDay
+        ).options(
+            joinedload(CalendarDay.holiday)
+        ).filter(
             extract('year', CalendarDay.date) == year,
             extract('month', CalendarDay.date) == month
-        )
-        .order_by(CalendarDay.date)
-        .all()
+        ).order_by(
+            CalendarDay.date
+        ).all()
     )
     
     logs = (
-        db.query(LogDailySummary)
-        .options(joinedload(LogDailySummary.project_hours), joinedload(LogDailySummary.timeframes))
-        .filter(
+        db.query(
+            LogDailySummary
+        ).options(
+            joinedload(LogDailySummary.project_hours), 
+            joinedload(LogDailySummary.timeframes)
+        ).filter(
             LogDailySummary.employee_id == emp_id,
-            extract('year', LogDailySummary.date) == year,
+            extract('year',  LogDailySummary.date) == year,
             extract('month', LogDailySummary.date) == month
-        )
-        .all()
+        ).all()
     )
 
     log_map = {l.date: l for l in logs}
     first_day = date(year, month, 1)
     
     contract = (
-        db.query(EmployeeHourTarget)
-        .filter(
+        db.query(
+            EmployeeHourTarget
+        ).filter(
             EmployeeHourTarget.employee_id == emp_id,
             (EmployeeHourTarget.valid_start <= first_day) | (EmployeeHourTarget.valid_start == None),
-            (EmployeeHourTarget.valid_stop >= first_day) | (EmployeeHourTarget.valid_stop == None)
-        )
-        .first()
+            (EmployeeHourTarget.valid_stop >= first_day)  | (EmployeeHourTarget.valid_stop == None)
+        ).first()
     )
 
     day_list = []
     for day in days:
-        log = log_map.get(day.date)
-        tf_work, tf_break = [], []
-        
+        log = log_map.get(day.date)        
         if log:
             tgt = log.target_hours
-            for tf in log.timeframes:
-                item = {"start": tf.start, "stop": tf.stop}
-                if tf.is_break: tf_break.append(item)
-                else: tf_work.append(item)
         elif day.is_weekend:
             tgt = 0.0
         elif day.holiday and contract:
@@ -173,18 +172,28 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
         else:
             tgt = 0.0
         
-        day_list.append({
+        day_template = {
+            "id": 0,
             "date": day.date,
-            "meta": day,
-            "status": log.status if log else "A",
-            "status_target_factor": log.status_target_factor if log else (0.0 if day.is_weekend else 1.0),
-            "note": log.general_note if log else None,
+            "meta": jsonable_encoder(day),
+            "employee_id": emp_id,
+            "status": "A",
+            "status_target_factor": 0.0 if day.is_weekend else 1.0,
+            "note": None,
             "target_hours": tgt,
-            "total_hours": sum(p.time for p in log.project_hours) if log else 0.0,
-            "project_hours": log.project_hours if log else [],
-            "timeframes_work": tf_work,
-            "timeframes_break": tf_break
-        })
+            "total_hours": 0.0,
+            "project_hours": [],
+            "timeframes": []
+        }
+        if log:
+            day_template["id"] = log.id
+            day_template["status"] = log.status
+            day_template["status_target_factor"] = log.status_target_factor
+            day_template["note"] = log.general_note
+            day_template["total_hours"] = sum(p.time for p in log.project_hours)
+            day_template["project_hours"] = log.project_hours
+            day_template["timeframes"] = jsonable_encoder(log.timeframes)
+        day_list.append(day_template)
     
     lt_target, lt_actual = get_employee_lifetime_stats(db, emp_id, first_day)
 
