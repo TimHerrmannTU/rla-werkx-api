@@ -238,12 +238,14 @@ def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
     log_map = {l.date: l for l in logs}
     
     return {
-        str(day.date): {
-            "status": log_map[day.date].status if day.date in log_map else "A",
-            "is_weekend": day.is_weekend is not None,
-            "holiday": day.holiday
+        "days": {
+            str(day.date): {
+                "status": log_map[day.date].status if day.date in log_map else "A",
+                "is_weekend": day.is_weekend is not None,
+                "holiday": day.holiday
+            }
+            for day in days
         }
-        for day in days
     }
 
 def get_dashboard(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Dict:

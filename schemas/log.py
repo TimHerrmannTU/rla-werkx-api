@@ -84,3 +84,19 @@ class DailyLogBatchSync(BaseModel):
 class MonthView(BaseModel):
     meta: dict # Or specific MonthStats schema
     days: List[DailyLogRead]
+    
+class YearView(BaseModel):
+    days: dict[date, YearViewDay]
+
+class YearViewDay(BaseModel):
+    status: str
+    is_weekend: bool
+    holiday: Optional[Holiday]
+
+class Holiday(BaseModel):
+    id: int
+    date: date
+    name: Optional[str]
+    is_company_holiday: bool
+    target_factor: Optional[float]
+    location_id: Optional[int]
