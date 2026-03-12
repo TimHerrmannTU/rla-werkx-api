@@ -211,28 +211,39 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
     }
 
 def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
-    results = (
+    days = (
         db.query(
             CalendarDay
-        ).outerjoin(
-            LogDailySummary,
-            (LogDailySummary.date == CalendarDay.date) & (LogDailySummary.employee_id == emp_id)
         ).options(
-            joinedload(CalendarDay.holiday),
-            contains_eager(CalendarDay.daily_logs)
+            joinedload(CalendarDay.holiday)
         ).filter(
-            extract('year', CalendarDay.date) == year
+            extract('year', CalendarDay.date) == year,
         ).order_by(
             CalendarDay.date
         ).all()
     )
+    
+    logs = (
+        db.query(
+            LogDailySummary
+        ).options(
+            joinedload(LogDailySummary.project_hours), 
+            joinedload(LogDailySummary.timeframes)
+        ).filter(
+            LogDailySummary.employee_id == emp_id,
+            extract('year',  LogDailySummary.date) == year,
+        ).all()
+    )
+    
+    log_map = {l.date: l for l in logs}
+    
     return {
         str(day.date): {
-            "status": day.daily_logs[0].status if day.daily_logs else ("W" if day.is_weekend else "A"),
-            "is_holiday": day.holiday is not None,
-            "holiday_name": day.holiday.name if day.holiday else None
+            "status": log_map[day.date].status if day.date in log_map else "A",
+            "is_weekend": day.is_weekend is not None,
+            "holiday": day.holiday
         }
-        for day in results
+        for day in days
     }
 
 def get_dashboard(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Dict:
