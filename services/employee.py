@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Optional, Tuple, List, Dict
 
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, contains_eager
 from sqlalchemy import extract
 from models.log import LogDailySummary
 from models.calendar import CalendarDay
@@ -52,7 +52,11 @@ def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
     return emp
 
 def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Tuple[float, float]:
-    emp = db.query(Employee).filter(Employee.id == emp_id).first()
+    emp = db.query(
+        Employee
+    ).filter(
+        Employee.id == emp_id
+    ).first()
     if not emp: return 0.0, 0.0
     
     calc_start = emp.start_tracking_date
@@ -204,6 +208,31 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
             "lt_overtime": round(lt_actual - lt_target, 2)
         },
         "days": day_list
+    }
+
+def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
+    results = (
+        db.query(
+            CalendarDay
+        ).outerjoin(
+            LogDailySummary,
+            (LogDailySummary.date == CalendarDay.date) & (LogDailySummary.employee_id == emp_id)
+        ).options(
+            joinedload(CalendarDay.holiday),
+            contains_eager(CalendarDay.daily_logs)
+        ).filter(
+            extract('year', CalendarDay.date) == year
+        ).order_by(
+            CalendarDay.date
+        ).all()
+    )
+    return {
+        str(day.date): {
+            "status": day.daily_logs[0].status if day.daily_logs else ("W" if day.is_weekend else "A"),
+            "is_holiday": day.holiday is not None,
+            "holiday_name": day.holiday.name if day.holiday else None
+        }
+        for day in results
     }
 
 def get_dashboard(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Dict:
