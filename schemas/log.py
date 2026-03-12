@@ -90,6 +90,7 @@ class YearView(BaseModel):
 
 class YearViewDay(BaseModel):
     status: str
+    status_target_factor: float
     is_weekend: bool
     holiday: Optional[Holiday]
 

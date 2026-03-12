@@ -241,10 +241,15 @@ def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
         "days": {
             str(day.date): {
                 "status": log_map[day.date].status if day.date in log_map else "A",
+                "status_target_factor": log_map[day.date].status_target_factor if day.date in log_map else 1,
                 "is_weekend": day.is_weekend is not None,
                 "holiday": day.holiday
             }
-            for day in days
+            for day in days if (
+                day.date in log_map and 
+                log_map[day.date].status != "A" or 
+                day.holiday
+            ) 
         }
     }
 
