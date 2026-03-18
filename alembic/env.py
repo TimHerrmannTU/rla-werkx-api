@@ -13,6 +13,8 @@ from config import get_settings
 # Add project root to python path to resolve 'database' and 'models'
 sys.path.append(os.getcwd())
 
+import models
+
 # Alembic Config object
 config = context.config
 
