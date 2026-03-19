@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, time
 
+from schemas.calendar import CalendarDayRead
+
 ################
 # CRUD SCHEMAS #
 ################
@@ -23,12 +25,9 @@ class ProjectLogRead(BaseModel):
     note: Optional[str] = None
     
     class Config: from_attributes = True
-
-class DailyLogRead(BaseModel):
+    
+class FullLogRead(BaseModel):
     id: int
-    date: date
-    meta: Optional[dict] = None
-    employee_id: str
     status: str
     status_target_factor: float
     status_note: Optional[str] = None
@@ -37,6 +36,12 @@ class DailyLogRead(BaseModel):
     
     project_hours: List[ProjectLogRead] = []
     timeframes: List[TimeframeRead] = []
+
+    class Config: from_attributes = True
+
+class DailyLogRead(BaseModel):
+    meta: CalendarDayRead
+    log: FullLogRead
 
     class Config: from_attributes = True
 
@@ -83,7 +88,7 @@ class DailyLogBatchSync(BaseModel):
 
 class MonthView(BaseModel):
     meta: dict # Or specific MonthStats schema
-    days: List[DailyLogRead]
+    days: dict[date, DailyLogRead]
     
 class YearView(BaseModel):
     days: dict[date, YearViewDay]

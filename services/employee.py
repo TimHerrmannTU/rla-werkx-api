@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session, joinedload, contains_eager
 from sqlalchemy import extract
 from models.log import LogDailySummary
-from models.calendar import CalendarDay
+from models.calendar import CalendarDay, Holiday
 from models.project import Project
 from models.employee import Employee, EmployeeHourTarget, EmployeeVacationClaim
 from models.config import VacationRule
@@ -126,7 +126,7 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
         db.query(
             CalendarDay
         ).options(
-            joinedload(CalendarDay.holiday)
+            joinedload(CalendarDay.holiday).joinedload(Holiday.location)
         ).filter(
             extract('year', CalendarDay.date) == year,
             extract('month', CalendarDay.date) == month
@@ -161,43 +161,27 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
         ).first()
     )
 
-    day_list = []
-    for day in days:
-        log = log_map.get(day.date)        
-        if log:
-            tgt = log.target_hours
-        elif day.is_weekend:
-            tgt = 0.0
-        elif day.holiday and contract:
-            tgt = contract.weekly_target * day.holiday.target_factor
-        elif contract:
-            spread = contract.target_spread
-            tgt = contract.weekly_target * (spread[day.date.weekday()] / sum(spread))
-        else:
-            tgt = 0.0
-        
-        day_template = {
-            "id": 0,
-            "date": day.date,
-            "meta": jsonable_encoder(day),
-            "employee_id": emp_id,
-            "status": "A",
-            "status_target_factor": 0.0 if day.is_weekend else 1.0,
-            "note": None,
-            "target_hours": tgt,
-            "total_hours": 0.0,
-            "project_hours": [],
-            "timeframes": []
-        }
-        if log:
-            day_template["id"] = log.id
-            day_template["status"] = log.status
-            day_template["status_target_factor"] = log.status_target_factor
-            day_template["note"] = log.general_note
-            day_template["total_hours"] = sum(p.time for p in log.project_hours)
-            day_template["project_hours"] = log.project_hours
-            day_template["timeframes"] = jsonable_encoder(log.timeframes)
-        day_list.append(day_template)
+    day_dict = {};
+    for day in days: # pre-populate missing logs with empty data
+        log = log_map.get(day.date)  
+        if not log:
+            tgt = 0.0 # weekend or free
+            if day.holiday and contract:
+                tgt = contract.weekly_target * day.holiday.target_factor
+            elif contract:
+                spread = contract.target_spread
+                tgt = contract.weekly_target * (spread[day.date.weekday()] / sum(spread))
+            
+            log_map[day.date] = {
+                "id": -1,
+                "status": "A",
+                "status_target_factor": 1.0,
+                "status_note": "",
+                "target_hours": tgt,
+                "general_note": "",
+                "project_hours": [],
+                "timeframes": [],
+            }
     
     lt_target, lt_actual = get_employee_lifetime_stats(db, emp_id, first_day)
 
@@ -207,7 +191,12 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
             "lt_actual": round(lt_actual, 2),
             "lt_overtime": round(lt_actual - lt_target, 2)
         },
-        "days": day_list
+        "days": {
+            str(day.date): {
+                "meta": jsonable_encoder(day),
+                "log": log_map.get(day.date)
+            } for day in days
+        }
     }
 
 def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
@@ -244,8 +233,7 @@ def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
                 "status_target_factor": log_map[day.date].status_target_factor if day.date in log_map else 1,
                 "is_weekend": day.is_weekend is not None,
                 "holiday": day.holiday
-            }
-            for day in days if (
+            } for day in days if (
                 day.date in log_map and 
                 log_map[day.date].status != "A" or 
                 day.holiday
