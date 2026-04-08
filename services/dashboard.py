@@ -1,11 +1,12 @@
 from datetime import date, timedelta
 from typing import Dict, List, Optional
 from collections import defaultdict
-
 from sqlalchemy.orm import Session
 from sqlalchemy import extract, func
+
 from models.project import Project, ProjectPhase
 from models.log import LogDailySummary, LogProjectHour
+from crud.project import project_crud
 
 def get_general(
     db: Session, 
@@ -102,24 +103,27 @@ def get_general(
 
     # Phase Distribution
     phase_query = apply_scope(
-        db.query(ProjectPhase.phase, func.sum(LogProjectHour.time))
-        .join(LogProjectHour, LogProjectHour.phase_id == ProjectPhase.id)
-        .join(LogDailySummary),
-        start_date, end_date
-    ).group_by(ProjectPhase.phase).order_by(ProjectPhase.phase).all()
+        db.query(
+            ProjectPhase.phase, 
+            func.sum(LogProjectHour.time)
+        ).join(
+            LogProjectHour, 
+            LogProjectHour.phase_id == ProjectPhase.id
+        ).join(
+            LogDailySummary
+        ), start_date, end_date
+    ).group_by(
+        ProjectPhase.phase
+    ).order_by(
+        ProjectPhase.phase
+    ).all()
 
     payload["phase_distribution"] = [
         {"phase": p_num, "hours": round(h)} for p_num, h in phase_query
     ]
 
     # Project Colors
-    pro_colors = db.query(
-        Project.id, 
-        Project.name,
-        Project.color
-    ).filter(
-        Project.id.in_(sorted_pids)
-    ).all()
+    pro_colors = project_crud.get_colors(db, sorted_pids)
     payload["pro_meta"] = {
         id: {"color": color, "name": name} for id, name, color in pro_colors
     }

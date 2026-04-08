@@ -1,4 +1,3 @@
-from calendar import monthrange
 from datetime import date
 from collections import defaultdict
 from typing import Optional, Tuple, Dict
@@ -13,6 +12,8 @@ from models.config import VacationRule
 from crud.log import get_employee_logs, get_employee_logs_within_range
 from crud.calendar import get_calendar_days, get_calendar_days_within_range
 from crud.employee import employee_crud
+from crud.employeeHourTarget import hour_contract_crud
+from crud.project import project_crud
 
 def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
     emp = employee_crud.get_with_details(db, emp_id)
@@ -58,6 +59,7 @@ def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[dat
     logs = get_employee_logs_within_range(db, emp_id, calc_start, calc_end)
     
     log_map = {l.date: l for l in logs}
+    
     actual_sum = sum(sum(p.time for p in log.project_hours) for log in logs)
     target_sum = sum(c.starting_balance for c in contracts if c.starting_balance)
 
@@ -96,42 +98,9 @@ def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[dat
 
 def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> Dict:
     days = get_calendar_days(db, year, month)
-    logs = get_employee_logs(db, emp_id, year, month)
-
-    log_map = {l.date: l for l in logs}
+    timetable = _build_timetable(db, emp_id, year, month)
+    
     first_day = date(year, month, 1)
-    
-    contract = (
-        db.query(
-            EmployeeHourTarget
-        ).filter(
-            EmployeeHourTarget.employee_id == emp_id,
-            (EmployeeHourTarget.valid_start <= first_day) | (EmployeeHourTarget.valid_start == None),
-            (EmployeeHourTarget.valid_stop >= first_day)  | (EmployeeHourTarget.valid_stop == None)
-        ).first()
-    )
-
-    for day in days: # pre-populate missing logs with empty data
-        log = log_map.get(day.date)  
-        if not log:
-            tgt = 0.0 # weekend or free
-            if day.holiday and contract:
-                tgt = contract.weekly_target * day.holiday.target_factor
-            elif contract:
-                spread = contract.target_spread
-                tgt = contract.weekly_target * (spread[day.date.weekday()] / sum(spread))
-            
-            log_map[day.date] = {
-                "id": -1,
-                "status": "A",
-                "status_target_factor": 1.0,
-                "status_note": "",
-                "target_hours": tgt,
-                "general_note": "",
-                "project_hours": [],
-                "timeframes": [],
-            }
-    
     lt_target, lt_actual = get_employee_lifetime_stats(db, emp_id, first_day)
 
     return {
@@ -143,10 +112,43 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
         "days": {
             str(day.date): {
                 "meta": jsonable_encoder(day),
-                "log": log_map.get(day.date)
+                "log": timetable.get(day.date)
             } for day in days
         }
     }
+
+def _build_timetable(db: Session, emp_id: str, year: int, month: int) -> list:
+    
+    days = get_calendar_days(db, year, month)
+    contract = hour_contract_crud.get_for_month(db, emp_id, year, month)
+    logs = get_employee_logs(db, emp_id, year, month)
+    log_map = {l.date: l for l in logs}
+    
+    for day in days: # pre-populate missing logs with empty data
+        if not log_map.get(day.date):
+            log_map[day.date] = _create_empty_log(day, contract)
+            
+    return log_map
+
+def _create_empty_log(day, contract):
+    tgt = 0.0 # weekend or free
+    if day.holiday and contract:
+        tgt = contract.weekly_target * day.holiday.target_factor
+    elif contract:
+        spread = contract.target_spread
+        tgt = contract.weekly_target * (spread[day.date.weekday()] / sum(spread))
+    
+    return {
+        "id": -1,
+        "status": "A",
+        "status_target_factor": 1.0,
+        "status_note": "",
+        "target_hours": tgt,
+        "general_note": "",
+        "project_hours": [],
+        "timeframes": [],
+    }
+    
 
 def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
     days = get_calendar_days(db, year)
@@ -186,7 +188,8 @@ def get_dashboard(db: Session, emp_id: str, calc_end: Optional[date] = None) -> 
             pcm[p_log.project_id]["phases"][p_log.phase_id] += p_log.time
             total_worktime += p_log.time
 
-    pro_colors = {p.id: p.color for p in db.query(Project.id, Project.color).filter(Project.id.in_(pcm.keys())).all()}
+    db_project_colors = project_crud.get_colors(db, pcm.keys())
+    pro_colors = {p.id: p.color for p in db_project_colors}
 
     for p_id, data in pcm.items():
         if p_id in pro_colors and pro_colors[p_id]:
