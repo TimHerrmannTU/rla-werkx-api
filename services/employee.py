@@ -5,47 +5,83 @@ from typing import Optional, Tuple, Dict
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session, joinedload
 
-from models.project import Project
-from models.employee import Employee, EmployeeHourTarget, EmployeeVacationClaim
-from models.config import VacationRule
+from schemas.employee import EmployeeDetailedView
+from schemas.employeeHourTarget import EmployeeHourTargetRead
+from schemas.employeeVacationClaim import EmployeeVacationClaimRead
 
 from crud.log import get_employee_logs, get_employee_logs_within_range
 from crud.calendar import get_calendar_days, get_calendar_days_within_range
 from crud.employee import employee_crud
 from crud.employeeHourTarget import hour_contract_crud
+from crud.employeeVacationClaim import vacation_contract_crud
 from crud.project import project_crud
 
-def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
+# ENDPOINT /employees/detailed/{emp_id}
+
+def get_employee_detailed(db: Session, emp_id: str) -> Optional[EmployeeDetailedView]:
     emp = employee_crud.get_with_details(db, emp_id)
     if not emp: return None # gate
     
+    claim_history = _build_vacation_claim_history(db, emp)
+    view = EmployeeDetailedView.model_validate(emp)
+    view.vacation_claims = claim_history
+    
+    return view
+    
+def _build_vacation_claim_history(db, emp) -> list[EmployeeVacationClaimRead]:
+        
+    vacation_rules = vacation_contract_crud.get_all(db)
+    existing_claims = {claim.year: claim for claim in emp.vacation_claims}
+    
     first_year = emp.first_work_year
     current_year = date.today().year
-    year_lut = {claim.year for claim in list(emp.vacation_claims)}
-    final_claims = list(emp.vacation_claims)
 
-    # Calculate missing vacation claims based on seniority rules
-    for year in range(first_year, current_year + 1):
-        if year not in year_lut:
-            seniority = year - first_year
-            rule = (
-                db.query(
-                    VacationRule
-                ).filter(
-                    VacationRule.min_years <= seniority,
-                    VacationRule.max_years >= seniority
-                ).first()
-            )
+    claim_history = [
+        existing_claims.get(year) or _generate_virtual_claim(vacation_rules, emp.id, first_year, year)
+        for year in range(first_year, current_year + 1)
+    ]
 
-            final_claims.append(EmployeeVacationClaim(
-                year=year,
-                days=rule.days if rule else 0.0
-            ))
+    return claim_history
 
-    emp.vacation_claims = final_claims
-    return emp
+def _generate_virtual_claim(vacation_rules, emp_id, first_year: int, year: int) -> EmployeeVacationClaimRead:
+    seniority = year - first_year
+    return EmployeeVacationClaimRead(
+        id=-1,
+        employee_id=emp_id,
+        year=year,
+        days=_get_claim_by_seniority(vacation_rules, seniority)
+    )
+    
+def _get_claim_by_seniority(rules: list[EmployeeVacationClaimRead], seniority: int) -> float:
+    for rule in rules:
+        if rule.min_years <= seniority <= rule.max_years:
+            return rule.days
+    return 0.0
 
-def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Tuple[float, float]:
+# ENDPOINT 
+
+def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> Dict:
+    days = get_calendar_days(db, year, month)
+    timesheet = _build_timesheet(db, emp_id, year, month)
+    
+    first_day = date(year, month, 1)
+    lt_target, lt_actual = _get_employee_lifetime_stats(db, emp_id, first_day)
+
+    return {
+        "meta": {
+            "lt_target": round(lt_target, 2),
+            "lt_actual": round(lt_actual, 2),
+            "lt_overtime": round(lt_actual - lt_target, 2)
+        },
+        "days": {
+            str(day.date): {
+                "meta": jsonable_encoder(day),
+                "log": timesheet.get(day.date)
+            } for day in days
+        }
+    }
+    
+def _get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Tuple[float, float]:
     
     emp = employee_crud.get_with_details(db, emp_id)
     if not emp: return 0.0, 0.0
@@ -95,40 +131,19 @@ def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[dat
     
     return target_sum, actual_sum
 
-
-def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> Dict:
-    days = get_calendar_days(db, year, month)
-    timetable = _build_timetable(db, emp_id, year, month)
-    
-    first_day = date(year, month, 1)
-    lt_target, lt_actual = get_employee_lifetime_stats(db, emp_id, first_day)
-
-    return {
-        "meta": {
-            "lt_target": round(lt_target, 2),
-            "lt_actual": round(lt_actual, 2),
-            "lt_overtime": round(lt_actual - lt_target, 2)
-        },
-        "days": {
-            str(day.date): {
-                "meta": jsonable_encoder(day),
-                "log": timetable.get(day.date)
-            } for day in days
-        }
-    }
-
-def _build_timetable(db: Session, emp_id: str, year: int, month: int) -> list:
+def _build_timesheet(db: Session, emp_id: str, year: int, month: int) -> list:
     
     days = get_calendar_days(db, year, month)
     contract = hour_contract_crud.get_for_month(db, emp_id, year, month)
     logs = get_employee_logs(db, emp_id, year, month)
-    log_map = {l.date: l for l in logs}
     
-    for day in days: # pre-populate missing logs with empty data
-        if not log_map.get(day.date):
-            log_map[day.date] = _create_empty_log(day, contract)
-            
-    return log_map
+    log_map = {l.date: l for l in logs}
+    timesheet = {
+        str(day.date): log_map.get(day.date) or _create_empty_log(day, contract)
+        for day in days
+    } 
+    
+    return timesheet 
 
 def _create_empty_log(day, contract):
     tgt = 0.0 # weekend or free

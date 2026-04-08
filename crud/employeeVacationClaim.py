@@ -5,4 +5,4 @@ from .base import CRUDBase
 class CRUDEmployeeVacationClaim(CRUDBase[EmployeeVacationClaim, EmployeeVacationClaimCreate, EmployeeVacationClaimUpdate]):
     pass # Add custom methods here
 
-claim_crud = CRUDEmployeeVacationClaim(EmployeeVacationClaim)
+vacation_contract_crud = CRUDEmployeeVacationClaim(EmployeeVacationClaim)
