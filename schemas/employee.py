@@ -59,14 +59,7 @@ class HolidayClaimRead(BaseModel):
 # VIEW SCHEMAS #
 ################
 
-class EmployeeDetailedView(BaseModel):
-    id: str
-    name: str
-    birthday: Optional[date]
-    entry_date: Optional[date]
-    location: LocationRead
-    color: str
-    active: bool
+class EmployeeDetailedView(EmployeeRead):
     hour_targets: List[ContractRead] = [] # If needed
     vacation_claims: List[HolidayClaimRead] = []
     

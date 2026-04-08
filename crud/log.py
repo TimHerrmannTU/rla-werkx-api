@@ -1,6 +1,45 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import extract
+from sqlalchemy.orm import Session, joinedload
+from typing import Sequence
+from datetime import date
+# custom modules
 from models.log import LogDailySummary, LogProjectHour, LogTimeframe
 from schemas.log import DailyLogSync
+
+def get_employee_logs(db: Session, emp_id: str, year: int, month: int = None) -> Sequence[LogDailySummary]:
+
+    # get employee specific logs of a entire year or a specific month
+    filters = [
+        LogDailySummary.employee_id == emp_id,
+        extract('year',  LogDailySummary.date) == year
+    ]
+    if month: filters.append( extract('month', LogDailySummary.date) == month )
+    
+    return (
+        db.query(
+            LogDailySummary
+        ).options(
+            joinedload(LogDailySummary.project_hours), 
+            joinedload(LogDailySummary.timeframes)
+        ).filter(
+            *filters
+        ).all()
+    )
+
+
+def get_employee_logs_within_range(db: Session, emp_id: str, start_date: date, end_date: date) -> Sequence[LogDailySummary]:
+    return (
+        db.query(
+            LogDailySummary
+        ).options(
+            joinedload(LogDailySummary.project_hours)
+        ).filter(
+            LogDailySummary.employee_id == emp_id,
+            LogDailySummary.date >= start_date,
+            LogDailySummary.date < end_date
+        ).all()
+    )
+
 
 def sync_daily_log(db: Session, schema: DailyLogSync):
     # 1. Fetch or Create Parent

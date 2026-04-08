@@ -1,33 +1,26 @@
 from calendar import monthrange
 from datetime import date
 from collections import defaultdict
-from typing import Optional, Tuple, List, Dict
+from typing import Optional, Tuple, Dict
 
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session, joinedload, contains_eager
-from sqlalchemy import extract
-from models.log import LogDailySummary
-from models.calendar import CalendarDay, Holiday
+from sqlalchemy.orm import Session, joinedload
+
 from models.project import Project
 from models.employee import Employee, EmployeeHourTarget, EmployeeVacationClaim
 from models.config import VacationRule
 
-def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
-    emp = (
-        db.query(Employee)
-        .options(
-            joinedload(Employee.hour_targets),
-            joinedload(Employee.vacation_claims)
-        )
-        .filter(Employee.id == emp_id)
-        .first()
-    )
+from crud.log import get_employee_logs, get_employee_logs_within_range
+from crud.calendar import get_calendar_days, get_calendar_days_within_range
+from crud.employee import employee_crud
 
+def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
+    emp = employee_crud.get_with_details(db, emp_id)
     if not emp: return None # gate
     
     first_year = emp.first_work_year
     current_year = date.today().year
-    year_lut = {claim.year for claim in emp.vacation_claims}
+    year_lut = {claim.year for claim in list(emp.vacation_claims)}
     final_claims = list(emp.vacation_claims)
 
     # Calculate missing vacation claims based on seniority rules
@@ -35,12 +28,12 @@ def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
         if year not in year_lut:
             seniority = year - first_year
             rule = (
-                db.query(VacationRule)
-                .filter(
+                db.query(
+                    VacationRule
+                ).filter(
                     VacationRule.min_years <= seniority,
                     VacationRule.max_years >= seniority
-                )
-                .first()
+                ).first()
             )
 
             final_claims.append(EmployeeVacationClaim(
@@ -52,38 +45,17 @@ def get_employee_detailed(db: Session, emp_id: str) -> Optional[Employee]:
     return emp
 
 def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Tuple[float, float]:
-    emp = db.query(
-        Employee
-    ).filter(
-        Employee.id == emp_id
-    ).first()
+    
+    emp = employee_crud.get_with_details(db, emp_id)
     if not emp: return 0.0, 0.0
+    
+    contracts = emp.hour_targets
     
     calc_start = emp.start_tracking_date
     if calc_end is None: calc_end = date.today()
 
-    days = (
-        db.query(CalendarDay)
-        .options(joinedload(CalendarDay.holiday))
-        .filter(
-            CalendarDay.date >= calc_start, 
-            CalendarDay.date < calc_end
-        ).order_by(CalendarDay.date)
-        .all()
-    )
-    
-    contracts = db.query(EmployeeHourTarget).filter(EmployeeHourTarget.employee_id == emp_id).all()
-    
-    logs = (
-        db.query(LogDailySummary)
-        .options(joinedload(LogDailySummary.project_hours))
-        .filter(
-            LogDailySummary.employee_id == emp_id,
-            LogDailySummary.date >= calc_start,
-            LogDailySummary.date < calc_end
-        )
-        .all()
-    )
+    days = get_calendar_days_within_range(db, calc_start, calc_end)
+    logs = get_employee_logs_within_range(db, emp_id, calc_start, calc_end)
     
     log_map = {l.date: l for l in logs}
     actual_sum = sum(sum(p.time for p in log.project_hours) for log in logs)
@@ -121,32 +93,10 @@ def get_employee_lifetime_stats(db: Session, emp_id: str, calc_end: Optional[dat
     
     return target_sum, actual_sum
 
+
 def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> Dict:
-    days = (
-        db.query(
-            CalendarDay
-        ).options(
-            joinedload(CalendarDay.holiday).joinedload(Holiday.location)
-        ).filter(
-            extract('year', CalendarDay.date) == year,
-            extract('month', CalendarDay.date) == month
-        ).order_by(
-            CalendarDay.date
-        ).all()
-    )
-    
-    logs = (
-        db.query(
-            LogDailySummary
-        ).options(
-            joinedload(LogDailySummary.project_hours), 
-            joinedload(LogDailySummary.timeframes)
-        ).filter(
-            LogDailySummary.employee_id == emp_id,
-            extract('year',  LogDailySummary.date) == year,
-            extract('month', LogDailySummary.date) == month
-        ).all()
-    )
+    days = get_calendar_days(db, year, month)
+    logs = get_employee_logs(db, emp_id, year, month)
 
     log_map = {l.date: l for l in logs}
     first_day = date(year, month, 1)
@@ -161,7 +111,6 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
         ).first()
     )
 
-    day_dict = {};
     for day in days: # pre-populate missing logs with empty data
         log = log_map.get(day.date)  
         if not log:
@@ -200,29 +149,8 @@ def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> 
     }
 
 def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
-    days = (
-        db.query(
-            CalendarDay
-        ).options(
-            joinedload(CalendarDay.holiday)
-        ).filter(
-            extract('year', CalendarDay.date) == year,
-        ).order_by(
-            CalendarDay.date
-        ).all()
-    )
-    
-    logs = (
-        db.query(
-            LogDailySummary
-        ).options(
-            joinedload(LogDailySummary.project_hours), 
-            joinedload(LogDailySummary.timeframes)
-        ).filter(
-            LogDailySummary.employee_id == emp_id,
-            extract('year',  LogDailySummary.date) == year,
-        ).all()
-    )
+    days = get_calendar_days(db, year)
+    logs = get_employee_logs(db, emp_id, year)
     
     log_map = {l.date: l for l in logs}
     
@@ -242,24 +170,15 @@ def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
     }
 
 def get_dashboard(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Dict:
-    emp = db.query(Employee).filter(Employee.id == emp_id).first()
+    emp = employee_crud.get(db, emp_id)
     if not emp: return {"meta": {"total": 0}, "pros": {}}
 
     calc_start = emp.start_tracking_date
     if calc_end is None: calc_end = date.today()
 
-    logs = (
-        db.query(LogDailySummary)
-        .options(joinedload(LogDailySummary.project_hours))
-        .filter(
-            LogDailySummary.employee_id == emp_id,
-            LogDailySummary.date >= calc_start,
-            LogDailySummary.date < calc_end
-        )
-        .all()
-    )
+    logs = get_employee_logs_within_range(db, emp_id, calc_start, calc_end)
 
-    pcm = defaultdict(lambda: {"phases": defaultdict(float), "total": 0, "color": "#cccccc"})
+    pcm = defaultdict(lambda: {"phases": defaultdict(float), "total": 0, "color": "#cccccc"}) # project color map ?
     total_worktime = 0.0
 
     for log in logs:
