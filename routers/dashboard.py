@@ -6,7 +6,7 @@ from database import get_db
 
 import services.dashboard as dashboard_service
 import services.project as project_service
-import services.employee as employee_service
+from services.employee import GetEmployeeDashboard 
 
 from schemas.project import ProjectDashboardView
 
@@ -27,7 +27,5 @@ def get_project(project_id: str, db: Session = Depends(get_db)):
 
 @router.get("/employee/{emp_id}")
 def get_project(emp_id: str, db: Session = Depends(get_db)):
-    pro = employee_service.get_dashboard(db, emp_id)
-    if not pro:
-        raise HTTPException(404, "Project not found")
-    return pro
+    action = GetEmployeeDashboard(db)
+    return action.execute(emp_id)

@@ -6,6 +6,7 @@ from database import get_db
 
 from crud.employee import employee_crud
 import services.employee as employee_service
+from services.employee import GetEmployeeDetailed
 from schemas.employee import EmployeeRead, EmployeeCreate, EmployeeUpdate, EmployeeDetailedView
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
@@ -48,6 +49,7 @@ def delete_employee(emp_id: str, db: Session = Depends(get_db)):
 
 @router.get("/detailed/{emp_id}", response_model=EmployeeDetailedView)
 def get_employee_single_long(emp_id: str, db: Session = Depends(get_db)):
-    emp = employee_service.get_employee_detailed(db, emp_id)
+    action = GetEmployeeDetailed(db)
+    emp = action.execute(emp_id)
     if not emp: raise HTTPException(404, "Employee not found")
     return emp
