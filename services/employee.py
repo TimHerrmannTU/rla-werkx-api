@@ -16,7 +16,9 @@ from crud.employeeHourTarget import hour_contract_crud
 from crud.employeeVacationClaim import vacation_contract_crud
 from crud.project import project_crud
 
-# ENDPOINT /employees/detailed/{emp_id}
+#########################################
+# ENDPOINT /employees/detailed/{emp_id} #
+#########################################
 
 def get_employee_detailed(db: Session, emp_id: str) -> Optional[EmployeeDetailedView]:
     emp = employee_crud.get_with_details(db, emp_id)
@@ -45,11 +47,12 @@ def _build_vacation_claim_history(db, emp) -> list[EmployeeVacationClaimRead]:
 
 def _generate_virtual_claim(vacation_rules, emp_id, first_year: int, year: int) -> EmployeeVacationClaimRead:
     seniority = year - first_year
+    claim_in_days = _get_claim_by_seniority(vacation_rules, seniority)
     return EmployeeVacationClaimRead(
         id=-1,
         employee_id=emp_id,
         year=year,
-        days=_get_claim_by_seniority(vacation_rules, seniority)
+        days=claim_in_days
     )
     
 def _get_claim_by_seniority(rules: list[EmployeeVacationClaimRead], seniority: int) -> float:
@@ -58,7 +61,9 @@ def _get_claim_by_seniority(rules: list[EmployeeVacationClaimRead], seniority: i
             return rule.days
     return 0.0
 
-# ENDPOINT 
+##########################################
+# ENDPOINT /logs/{emp_id}/{year}/{month} #
+##########################################
 
 def get_employee_month_view(db: Session, emp_id: str, year: int, month: int) -> Dict:
     days = get_calendar_days(db, year, month)
@@ -163,7 +168,10 @@ def _create_empty_log(day, contract):
         "project_hours": [],
         "timeframes": [],
     }
-    
+
+##################################
+# ENDPOINT /logs/{emp_id}/{year} #
+##################################
 
 def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
     days = get_calendar_days(db, year)
@@ -185,6 +193,10 @@ def get_employee_year_view(db: Session, emp_id: str, year: int) -> Dict:
             ) 
         }
     }
+
+#########################################
+# ENDPOINT /dashboard/employee/{emp_id} #
+#########################################
 
 def get_dashboard(db: Session, emp_id: str, calc_end: Optional[date] = None) -> Dict:
     emp = employee_crud.get(db, emp_id)
