@@ -45,7 +45,7 @@ class GetProjectDashboard:
         self._inject_stats(pro.flags,  self.flag_stats)
 
         # Final formatting and rounding
-        self.grand_total = round(self.grand_total, 2)
+        pro.total_hours = round(self.grand_total, 2)
         pro.hours_per_emp = dict(sorted(
             {k: round(v, 2) for k, v in self.emp_totals.items()}.items(), 
             key=lambda x: x[1], 
