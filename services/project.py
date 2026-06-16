@@ -37,7 +37,7 @@ class GetProjectDashboard:
                 Employee.id.in_(unique_emp_ids)
             ).all()
         )
-        emp_name_map = {e.id: e.name for e in emp_rows}
+        pro.emp_map = {e.id: e.name for e in emp_rows}
         
         self._create_empty_timeline(stats)
         self._calculate_aggregates(stats)
@@ -46,15 +46,21 @@ class GetProjectDashboard:
 
         # Final formatting and rounding
         self.grand_total = round(self.grand_total, 2)
-        self.emp_totals = dict(sorted(
+        pro.hours_per_emp = dict(sorted(
             {k: round(v, 2) for k, v in self.emp_totals.items()}.items(), 
             key=lambda x: x[1], 
             reverse=True
         ))
-        self.timeline = {k: round(v, 2) for k, v in self.timeline.items()}
+        pro.timeline = {k: round(v, 2) for k, v in self.timeline.items()}
 
         return pro
     
+    def _create_empty_timeline(self, stats):
+        entry_dates = sorted({row.date for row in stats})
+        if entry_dates: # Initialize timeline with zeros for the full range
+            for d in self._date_range_generator(entry_dates[0], entry_dates[-1]):
+                self.timeline[d] = 0.0
+                
     def _calculate_aggregates(self, stats):
         for phase_id, flag_id, d, emp_id, hours in stats:
             h = float(hours or 0)
@@ -71,12 +77,6 @@ class GetProjectDashboard:
                 self.flag_stats[flag_id]["total"] += h
                 self.flag_stats[flag_id]["emps"][emp_id] += h
     
-    def _create_empty_timeline(self, stats):
-        entry_dates = sorted({row.date for row in stats})
-        if entry_dates: # Initialize timeline with zeros for the full range
-            for d in self._date_range_generator(entry_dates[0], entry_dates[-1]):
-                self.timeline[d] = 0.0
-
     def _date_range_generator(self, start_date: date, end_date: date) -> Generator[date, None, None]:
         curr_date = start_date
         while curr_date <= end_date:
