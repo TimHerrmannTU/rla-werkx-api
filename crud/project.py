@@ -29,7 +29,7 @@ class CRUDProject(CRUDBase[Project, ProjectCreate, ProjectUpdate]):
         return query.order_by(self.model.id).all()
     
     def get_colors(self, db: Session, project_ids: list[int]):
-        db_colors = (
+        return (
             db.query(
                 Project.id,
                 Project.name,
