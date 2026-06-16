@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 
 import services.dashboard as dashboard_service
-import services.project as project_service
+import services.project
 from services.employee import GetEmployeeDashboard 
 
 from schemas.project import ProjectDashboardView
@@ -20,7 +20,8 @@ def get_general(db: Session = Depends(get_db)):
 
 @router.get("/project/{project_id}", response_model=ProjectDashboardView)
 def get_project(project_id: str, db: Session = Depends(get_db)):
-    pro = project_service.get_dashboard(db, project_id)
+    project_service = GetEmployeeDashboard(db)
+    pro = project_service.execute(project_id)
     if not pro:
         raise HTTPException(404, "Project not found")
     return pro

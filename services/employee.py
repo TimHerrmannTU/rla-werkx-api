@@ -45,18 +45,18 @@ class GetEmployeeDetailed:
         current_year = date.today().year
 
         claim_history = [
-            existing_claims.get(year) or self._generate_virtual_claim(vacation_rules, emp.id, first_year, year)
+            existing_claims.get(year) or self._generate_virtual_claim(emp, vacation_rules, year)
             for year in range(first_year, current_year + 1)
         ]
 
         return claim_history
 
-    def _generate_virtual_claim(self, vacation_rules: list[EmployeeVacationClaimRead], emp_id: str, first_year: int, year: int) -> EmployeeVacationClaimRead:
-        seniority = year - first_year
+    def _generate_virtual_claim(self, emp: EmployeeDetailedView, vacation_rules: list[EmployeeVacationClaimRead], year: int) -> EmployeeVacationClaimRead:
+        seniority = year - emp.first_work_year
         claim_in_days = self._get_claim_by_seniority(vacation_rules, seniority)
         return EmployeeVacationClaimRead(
             id=-1,
-            employee_id=emp_id,
+            employee_id=emp.id,
             year=year,
             days=claim_in_days
         )

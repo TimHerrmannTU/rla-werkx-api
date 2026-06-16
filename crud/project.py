@@ -1,7 +1,9 @@
 from typing import Union, List, Optional
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 
 from models.project import Project
+from models.log import LogProjectHour, LogDailySummary
 from schemas.project import ProjectCreate, ProjectUpdate
 from .base import CRUDBase
 
@@ -34,6 +36,28 @@ class CRUDProject(CRUDBase[Project, ProjectCreate, ProjectUpdate]):
                 Project.color
             ).filter(
                 Project.id.in_(project_ids)
+            ).all()
+        )
+        
+    def get_stats(self, db: Session, project_id: str):
+        ''' Aggregates Hours of Project by Phase, Flag, Date, and Employee '''
+        return (
+            db.query(
+                LogProjectHour.phase_id,
+                LogProjectHour.flag_id,
+                LogDailySummary.date,
+                LogDailySummary.employee_id,
+                func.sum(LogProjectHour.time)
+            ).join(
+                LogDailySummary, 
+                LogProjectHour.daily_entry_id == LogDailySummary.id
+            ).filter(
+                LogProjectHour.project_id == project_id
+            ).group_by(
+                LogProjectHour.phase_id, 
+                LogProjectHour.flag_id,
+                LogDailySummary.date,
+                LogDailySummary.employee_id,
             ).all()
         )
     
