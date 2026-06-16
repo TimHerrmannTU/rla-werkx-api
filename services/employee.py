@@ -238,7 +238,7 @@ class GetEmployeeDashboard():
         if not emp: return {"meta": {"total": 0}, "pros": {}}
 
         total_worktime = self._get_total_project_hours(emp, end_date)
-        self._apply_total_and_color_to_projects()
+        self._apply_project_metadata()
 
         return {
             "meta": {"total": round(total_worktime, 2)},
