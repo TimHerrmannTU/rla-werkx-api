@@ -37,8 +37,6 @@ def get_team_stats(
     end_date: Optional[date] = Query(None, description="End date of the timeframe (YYYY-MM-DD)")
 ):
     parsed_start, parsed_end = _parse_dates(start_date, end_date)
-    
-    # Delegating to a service function to fetch the combined metrics
     return dashboard_service.get_team_stats(
         db, 
         emp_ids=emp_ids, 

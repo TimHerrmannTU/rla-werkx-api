@@ -8,19 +8,27 @@ from models.project import Project, ProjectPhase
 from models.log import LogDailySummary, LogProjectHour
 from crud.project import project_crud
 
-def get_general(
-    db: Session, 
-    start_date: date, 
-    end_date: date, 
+
+def _get_dashboard_data(
+    db: Session,
+    start_date: date,
+    end_date: date,
+    emp_ids: Optional[List[str]] = None,
     include_internal: bool = False
 ) -> Dict:
     payload = {}
 
+    # Scopes queries by date, optional team filters, and internal project filters
     def apply_scope(query, s: date, e: date):
         q = query.filter(
             LogDailySummary.date >= s, 
             LogDailySummary.date <= e
         )
+        
+        # If team IDs are provided, restrict scope to those employees
+        if emp_ids is not None:
+            q = q.filter(LogDailySummary.employee_id.in_(emp_ids))
+            
         if not include_internal:
             q = q.filter(
                 LogProjectHour.project_id.notlike("AA%"),
@@ -63,7 +71,7 @@ def get_general(
         })
     payload["top_pros"] = final_pros
 
-    # Company History & Totals
+    # History & Totals (Company or Team)
     date_to_key = func.date_format(LogDailySummary.date, '%Y-%m')
     
     monthly_totals_query = apply_scope(
@@ -122,10 +130,58 @@ def get_general(
         {"phase": p_num, "hours": round(h)} for p_num, h in phase_query
     ]
 
-    # Project Colors
+    # Project Colors & Metadata
     pro_colors = project_crud.get_colors(db, sorted_pids)
     payload["pro_meta"] = {
         id: {"color": color, "name": name} for id, name, color in pro_colors
     }
 
     return payload
+
+def get_general(
+    db: Session, 
+    start_date: date, 
+    end_date: date, 
+    include_internal: bool = False
+) -> Dict:
+    # Delegates directly to core engine without employee filter
+    return _get_dashboard_data(
+        db, 
+        start_date=start_date, 
+        end_date=end_date, 
+        include_internal=include_internal
+    )
+
+
+def get_team_stats(
+    db: Session, 
+    emp_ids: List[str],
+    start_date: date, 
+    end_date: date, 
+    include_internal: bool = False
+) -> Dict:
+    # Defensive guard for empty arrays
+    if not emp_ids:
+        return {
+            "top_pros": [],
+            "total_worked_company": {
+                "total": 0,
+                "avg_per_month": 0,
+                "per_month": {}
+            },
+            "top_ten_pro_history": {
+                "labels": [],
+                "datasets": []
+            },
+            "phase_distribution": [],
+            "pro_meta": {}
+        }
+
+    # Delegates to core engine with the active team filter
+    return _get_dashboard_data(
+        db, 
+        start_date=start_date, 
+        end_date=end_date, 
+        emp_ids=emp_ids, 
+        include_internal=include_internal
+    )
