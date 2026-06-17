@@ -14,7 +14,7 @@ def _get_dashboard_data(
     start_date: date,
     end_date: date,
     emp_ids: Optional[List[str]] = None,
-    include_internal: bool = False
+    include_internal: bool = False,
 ) -> Dict:
     payload = {}
 
@@ -158,7 +158,7 @@ def get_team_stats(
     emp_ids: List[str],
     start_date: date, 
     end_date: date, 
-    include_internal: bool = False
+    include_internal: bool = True
 ) -> Dict:
     # Defensive guard for empty arrays
     if not emp_ids:
