@@ -15,6 +15,7 @@ def _get_dashboard_data(
     end_date: date,
     emp_ids: Optional[List[str]] = None,
     include_internal: bool = False,
+    interval: str = "month"
 ) -> Dict:
     payload = {}
 
@@ -72,7 +73,8 @@ def _get_dashboard_data(
     payload["top_pros"] = final_pros
 
     # History & Totals (Company or Team)
-    date_to_key = func.date_format(LogDailySummary.date, '%Y-%m')
+    date_format = '%Y-%m' if interval == "month" else '%x-%v'
+    date_to_key = func.date_format(LogDailySummary.date, date_format)
     
     monthly_totals_query = apply_scope(
         db.query(date_to_key, func.sum(LogProjectHour.time)).join(LogDailySummary),
@@ -142,23 +144,25 @@ def get_general(
     db: Session, 
     start_date: date, 
     end_date: date, 
-    include_internal: bool = False
+    include_internal: bool = False,
+    interval: str = "month"
 ) -> Dict:
     # Delegates directly to core engine without employee filter
     return _get_dashboard_data(
         db, 
         start_date=start_date, 
         end_date=end_date, 
-        include_internal=include_internal
+        include_internal=include_internal,
+        interval=interval
     )
-
 
 def get_team_stats(
     db: Session, 
     emp_ids: List[str],
     start_date: date, 
     end_date: date, 
-    include_internal: bool = True
+    include_internal: bool = True,
+    interval: str = "month"
 ) -> Dict:
     # Defensive guard for empty arrays
     if not emp_ids:
@@ -167,7 +171,7 @@ def get_team_stats(
             "total_worked_company": {
                 "total": 0,
                 "avg_per_month": 0,
-                "per_month": {}
+                "per_month": {} # TODO this key is lying
             },
             "top_ten_pro_history": {
                 "labels": [],
@@ -183,5 +187,6 @@ def get_team_stats(
         start_date=start_date, 
         end_date=end_date, 
         emp_ids=emp_ids, 
-        include_internal=include_internal
+        include_internal=include_internal,
+        interval=interval
     )

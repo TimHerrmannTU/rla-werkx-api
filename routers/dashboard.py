@@ -13,20 +13,23 @@ from schemas.project import ProjectDashboardView
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
-def _parse_dates(start_date: Optional[date], end_date: Optional[date]) -> tuple[date, date]:
-    today = date.today()
-    parsed_end = end_date if (end_date is not None) else today
-    parsed_start = start_date if (start_date is not None) else parsed_end - timedelta(days=365)
+def _parse_dates(start_date: Optional[date], end_date: Optional[date], interval: str = "month") -> tuple[date, date]:
+    parsed_end = end_date if (end_date is not None) else date.today()
+    
+    if start_date is None:
+        default_days = 84 if interval == "week" else 365 # 12 weeks or 12 months
+        parsed_start = start_date if (start_date is not None) else parsed_end - timedelta(days=default_days)
     return parsed_start, parsed_end
 
 @router.get("/")
 def get_general(
     db: Session = Depends(get_db),
     start_date: Optional[date] = Query(None, description="Start date of the timeframe (YYYY-MM-DD)"),
-    end_date: Optional[date] = Query(None, description="End date of the timeframe (YYYY-MM-DD)")
+    end_date: Optional[date] = Query(None, description="End date of the timeframe (YYYY-MM-DD)"),
+    interval: str = Query("month", pattern="^(month|week)$", description="Aggregation interval ('month' or 'week')")
 ):
-    parsed_start, parsed_end = _parse_dates(start_date, end_date)
-    return dashboard_service.get_general(db, start_date=parsed_start, end_date=parsed_end)
+    parsed_start, parsed_end = _parse_dates(start_date, end_date, interval)
+    return dashboard_service.get_general(db, start_date=parsed_start, end_date=parsed_end, interval=interval)
 
 
 @router.get("/team")
@@ -34,14 +37,16 @@ def get_team_stats(
     db: Session = Depends(get_db),
     emp_ids: list[str] = Query(..., description="List of employee IDs for the team statistics"),
     start_date: Optional[date] = Query(None, description="Start date of the timeframe (YYYY-MM-DD)"),
-    end_date: Optional[date] = Query(None, description="End date of the timeframe (YYYY-MM-DD)")
+    end_date: Optional[date] = Query(None, description="End date of the timeframe (YYYY-MM-DD)"),
+    interval: str = Query("month", pattern="^(month|week)$", description="Aggregation interval ('month' or 'week')")
 ):
-    parsed_start, parsed_end = _parse_dates(start_date, end_date)
+    parsed_start, parsed_end = _parse_dates(start_date, end_date, interval)
     return dashboard_service.get_team_stats(
         db, 
         emp_ids=emp_ids, 
         start_date=parsed_start, 
-        end_date=parsed_end
+        end_date=parsed_end,
+        interval=interval
     )
 
 
