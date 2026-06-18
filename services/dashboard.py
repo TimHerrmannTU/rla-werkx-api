@@ -84,8 +84,9 @@ def _get_dashboard_data(
     total_worked = round(sum(hours for _, hours in monthly_totals_query))
     payload["total_worked_company"] = {
         "total": total_worked,
-        "avg_per_month": round(total_worked / len(monthly_totals_query)) if monthly_totals_query else 0,
-        "per_month": {month: round(hours) for month, hours in monthly_totals_query}
+        "avg_per_timeframe": round(total_worked / len(monthly_totals_query)) if monthly_totals_query else 0,
+        "per_timeframe": {month: round(hours) for month, hours in monthly_totals_query},
+        "mode": interval
     }
 
     # Project Specific History (Top 10)
@@ -170,8 +171,9 @@ def get_team_stats(
             "top_pros": [],
             "total_worked_company": {
                 "total": 0,
-                "avg_per_month": 0,
-                "per_month": {} # TODO this key is lying
+                "avg_per_timeframe": 0,
+                "per_timeframe": {},
+                "mode": interval
             },
             "top_ten_pro_history": {
                 "labels": [],
