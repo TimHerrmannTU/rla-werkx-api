@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from src.core.database import get_db
 
 from src.modules.employee.crud.general import employee_crud
-from src.modules.employee.services.general import GetEmployeeDetailed
+from src.modules.employee.services.general import GetEmployeeDetailed, GetEmployeeDashboard 
 from src.modules.employee.schemas.general import EmployeeRead, EmployeeCreate, EmployeeUpdate, EmployeeDetailedView
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
@@ -46,9 +46,14 @@ def delete_employee(emp_id: str, db: Session = Depends(get_db)):
 # VIEW ENDPOINTS #
 ##################
 
-@router.get("/detailed/{emp_id}", response_model=EmployeeDetailedView)
+@router.get("/{emp_id}/detailed", response_model=EmployeeDetailedView)
 def get_employee_single_long(emp_id: str, db: Session = Depends(get_db)):
     action = GetEmployeeDetailed(db)
-    emp = action.execute(emp_id)
+    emp = action.execute(emp_id=emp_id)
     if not emp: raise HTTPException(404, "Employee not found")
     return emp
+
+@router.get("/{emp_id}/dashboard")
+def get_employee(emp_id: str, db: Session = Depends(get_db)):
+    action = GetEmployeeDashboard(db)
+    return action.execute(emp_id=emp_id)

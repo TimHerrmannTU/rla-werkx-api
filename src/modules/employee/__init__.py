@@ -1,2 +1,2 @@
 from .model import *
-from .service import *
+from .services import *

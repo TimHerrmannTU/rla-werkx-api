@@ -28,7 +28,7 @@ class GetEmployeeDetailed:
         self.db = db
 
     def execute(self, emp_id: str) -> Optional[EmployeeDetailedView]:
-        emp = employee_crud.get_with_details(emp_id)
+        emp = employee_crud.get_with_details(self.db, emp_id)
         if not emp: return None # gate
         
         vacation_rules = vacation_contract_crud.get_all(self.db)
@@ -61,7 +61,7 @@ class GetEmployeeDetailed:
             days=claim_in_days
         )
         
-    def _get_claim_by_seniority(rules: list[EmployeeVacationClaimRead], seniority: int) -> float:
+    def _get_claim_by_seniority(self, rules: list[EmployeeVacationClaimRead], seniority: int) -> float:
         for rule in rules:
             if rule.min_years <= seniority <= rule.max_years:
                 return rule.days

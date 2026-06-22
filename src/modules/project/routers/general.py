@@ -5,29 +5,10 @@ from sqlalchemy.orm import Session
 from src.core.database import get_db
 
 from src.modules.project.crud.project import project_crud
-import src.modules.project.service as project_service
-from src.modules.project.schemas.general import ProjectRead, ProjectCreate, ProjectUpdate, ProjectDetailedView
+from src.modules.project.schemas.general import ProjectRead, ProjectCreate, ProjectUpdate, ProjectDetailedView, ProjectDashboardView
+from src.modules.project.service import GetProjectDashboard
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
-
-
-##################
-# VIEW ENDPOINTS #
-##################
-
-@router.get("/detailed", response_model=list[ProjectDetailedView])
-def get_project_list_long(db: Session = Depends(get_db), active: Optional[bool] = None):
-    pros = project_crud.get_detailed(db, active=active)
-    if not pros:
-        raise HTTPException(404, "Project not found")
-    return pros
-
-@router.get("/detailed/{project_id}/", response_model=ProjectDetailedView)
-def get_project_single_long(project_id: str, db: Session = Depends(get_db)):
-    pro = project_crud.get_detailed(db, project_id)
-    if not pro: 
-        raise HTTPException(404, "Project not found")
-    return pro
 
 ##################
 # CRUD ENDPOINTS #
@@ -64,3 +45,30 @@ def delete_project(project_id: str, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(404, "Project not found")
     return None
+
+##################
+# VIEW ENDPOINTS #
+##################
+
+@router.get("/detailed", response_model=list[ProjectDetailedView])
+def get_project_list_long(db: Session = Depends(get_db), active: Optional[bool] = None):
+    pros = project_crud.get_detailed(db, active=active)
+    if not pros:
+        raise HTTPException(404, "Project not found")
+    return pros
+
+@router.get("/{project_id}/detailed", response_model=ProjectDetailedView)
+def get_project_single_long(project_id: str, db: Session = Depends(get_db)):
+    pro = project_crud.get_detailed(db, project_id)
+    if not pro: 
+        raise HTTPException(404, "Project not found")
+    return pro
+
+
+@router.get("/{project_id}/dashboard", response_model=ProjectDashboardView)
+def get_project(project_id: str, db: Session = Depends(get_db)):
+    action = GetProjectDashboard(db)
+    pro = action.execute(project_id)
+    if not pro:
+        raise HTTPException(404, "Project not found")
+    return pro

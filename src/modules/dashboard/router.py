@@ -6,10 +6,6 @@ from sqlalchemy.orm import Session
 from src.core.database import get_db
 
 from src.modules.dashboard.service import GetDashboardGeneral
-from src.modules.project.service import GetProjectDashboard
-from src.modules.employee.services.general import GetEmployeeDashboard 
-
-from src.modules.project.schemas.general import ProjectDashboardView
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -55,18 +51,3 @@ def get_team_stats(
         interval=interval
     )
     return action.execute()
-
-
-@router.get("/project/{project_id}", response_model=ProjectDashboardView)
-def get_project(project_id: str, db: Session = Depends(get_db)):
-    action = GetProjectDashboard(db)
-    pro = action.execute(project_id)
-    if not pro:
-        raise HTTPException(404, "Project not found")
-    return pro
-
-
-@router.get("/employee/{emp_id}")
-def get_employee(emp_id: str, db: Session = Depends(get_db)):
-    action = GetEmployeeDashboard(db)
-    return action.execute(emp_id)
