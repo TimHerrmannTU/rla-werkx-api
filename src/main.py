@@ -1,8 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.models import * 
-from src.routers import *
+from src.modules.employee import (
+    employee_general_router, 
+    employee_hour_target_router, 
+    employee_vacation_claim_router
+)
+from src.modules.project import (
+    project_general_router,
+    project_flag_router,
+    project_phase_router,
+)
 
 # Initialize the App
 app = FastAPI(title="WerkX API")
@@ -14,15 +22,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(project.router) 
-app.include_router(projectFlag.router) 
-app.include_router(projectPhase.router) 
+app.include_router(project_general_router) 
+app.include_router(project_flag_router) 
+app.include_router(project_phase_router) 
 
-app.include_router(employee.router)
-app.include_router(employeeHourTarget.router)
-app.include_router(employeeVacationClaim.router)
-
-app.include_router(team.router)
-
-app.include_router(log.router)
-app.include_router(dashboard.router)
+app.include_router(employee_general_router)
+app.include_router(employee_hour_target_router)
+app.include_router(employee_vacation_claim_router)
