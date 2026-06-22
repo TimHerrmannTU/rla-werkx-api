@@ -1,0 +1,28 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.models import * 
+from src.routers import *
+
+# Initialize the App
+app = FastAPI(title="WerkX API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For dev only. In prod, set to specific domain.
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(project.router) 
+app.include_router(projectFlag.router) 
+app.include_router(projectPhase.router) 
+
+app.include_router(employee.router)
+app.include_router(employeeHourTarget.router)
+app.include_router(employeeVacationClaim.router)
+
+app.include_router(team.router)
+
+app.include_router(log.router)
+app.include_router(dashboard.router)

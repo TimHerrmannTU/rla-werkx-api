@@ -7,13 +7,13 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 
-from database import Base
-from config import get_settings
+from src.database import Base
+from src.config import get_settings
 
 # Add project root to python path to resolve 'database' and 'models'
 sys.path.append(os.getcwd())
 
-import models
+import src.models as models
 
 # Alembic Config object
 config = context.config
