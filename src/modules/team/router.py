@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from src.core.database import get_db
 
-from src.models import Team
+from src.modules.team.model import Team
 from src.modules.team.schema import TeamRead, TeamCreate, TeamRead, TeamUpdate
 from src.modules.team.crud import team_crud
 

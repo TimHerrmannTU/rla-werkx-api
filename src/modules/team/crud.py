@@ -1,5 +1,5 @@
 # crud/team.py
-from src.modules.team.models import Team
+from src.modules.team.model import Team
 from src.modules.team.schema import TeamCreate, TeamUpdate
 from ...core.base_crud import CRUDBase
 

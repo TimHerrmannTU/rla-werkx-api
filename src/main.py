@@ -11,6 +11,8 @@ from src.modules.project import (
     project_flag_router,
     project_phase_router,
 )
+from src.modules.team import Team
+from src.modules.location import Location
 
 # Initialize the App
 app = FastAPI(title="WerkX API")
