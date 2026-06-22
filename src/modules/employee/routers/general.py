@@ -1,6 +1,9 @@
 from typing import Optional
+from datetime import date, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from src.core.utils.date_helper import parse_dates
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from src.core.database import get_db
 
@@ -45,6 +48,26 @@ def delete_employee(emp_id: str, db: Session = Depends(get_db)):
 ##################
 # VIEW ENDPOINTS #
 ##################
+
+@router.get("/dashboard")
+def get_team_stats(
+    db: Session = Depends(get_db),
+    emp_ids: list[str] = Query(..., description="List of employee IDs for the team statistics"),
+    start_date: Optional[date] = Query(None, description="Start date of the timeframe (YYYY-MM-DD)"),
+    end_date: Optional[date] = Query(None, description="End date of the timeframe (YYYY-MM-DD)"),
+    interval: str = Query("month", pattern="^(month|week)$", description="Aggregation interval ('month' or 'week')")
+):
+    parsed_start, parsed_end = parse_dates(start_date, end_date, interval)
+    '''
+    action = GetDashboardGeneral(
+        db, 
+        emp_ids=emp_ids, 
+        start_date=parsed_start, 
+        end_date=parsed_end,
+        interval=interval
+    )
+    '''
+    return None; # action.execute()
 
 @router.get("/{emp_id}/detailed", response_model=EmployeeDetailedView)
 def get_employee_single_long(emp_id: str, db: Session = Depends(get_db)):
