@@ -9,6 +9,7 @@ from src.core.database import get_db
 
 from src.modules.employee.crud.general import employee_crud
 from src.modules.employee.services.general import GetEmployeeDetailed, GetEmployeeDashboard 
+from src.modules.employee.services.team import GetDashboardTeam
 from src.modules.employee.schemas.general import EmployeeRead, EmployeeCreate, EmployeeUpdate, EmployeeDetailedView
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
@@ -58,15 +59,13 @@ def get_team_stats(
     interval: str = Query("month", pattern="^(month|week)$", description="Aggregation interval ('month' or 'week')")
 ):
     parsed_start, parsed_end = parse_dates(start_date, end_date, interval)
-    '''
-    action = GetDashboardGeneral(
+    action = GetDashboardTeam(
         db, 
         emp_ids=emp_ids, 
         start_date=parsed_start, 
         end_date=parsed_end,
         interval=interval
     )
-    '''
     return None; # action.execute()
 
 @router.get("/{emp_id}/detailed", response_model=EmployeeDetailedView)

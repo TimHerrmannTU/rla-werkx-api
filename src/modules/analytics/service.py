@@ -1,29 +1,29 @@
 from datetime import date, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Tuple
 from collections import defaultdict
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from src.models.project import Project, ProjectPhase
-from src.models.log import LogDailySummary, LogProjectHour
-from src.crud.project import project_crud
-
+from src.modules.project.model import Project, ProjectPhase
+from src.modules.log.model import LogDailySummary, LogProjectHour
+from src.modules.project.crud.project import project_crud
 
 class GetDashboardGeneral:
+    """
+    Service to compile general, company-wide dashboard statistics.
+    """
 
     def __init__(
         self,
         db: Session,
         start_date: date,
         end_date: date,
-        emp_ids: Optional[List[str]] = None,
         include_internal: bool = False,
         interval: str = "month"
     ):
         self.db = db
         self.start_date = start_date
         self.end_date = end_date
-        self.emp_ids = emp_ids
         self.include_internal = include_internal
         self.interval = interval
         
@@ -31,87 +31,15 @@ class GetDashboardGeneral:
         self.date_format = '%Y-%m' if self.interval == "month" else '%x-%v'
         self.date_to_key = func.date_format(LogDailySummary.date, self.date_format)
 
-    @classmethod
-    def get_general(
-        cls,
-        db: Session, 
-        start_date: date, 
-        end_date: date, 
-        include_internal: bool = False,
-        interval: str = "month"
-    ) -> Dict[str, Any]:
-        """
-        Retrieves general dashboard data without employee-specific filters.
-        """
-        instance = cls(
-            db=db,
-            start_date=start_date,
-            end_date=end_date,
-            emp_ids=None,
-            include_internal=include_internal,
-            interval=interval
-        )
-        return instance.execute()
-
-    @classmethod
-    def get_team_stats(
-        cls,
-        db: Session, 
-        emp_ids: List[str],
-        start_date: date, 
-        end_date: date, 
-        include_internal: bool = True,
-        interval: str = "month"
-    ) -> Dict[str, Any]:
-        """
-        Retrieves dashboard data filtered by team employee IDs.
-        """
-        if not emp_ids:
-            return cls._empty_response(interval)
-
-        instance = cls(
-            db=db,
-            start_date=start_date,
-            end_date=end_date,
-            emp_ids=emp_ids,
-            include_internal=include_internal,
-            interval=interval
-        )
-        return instance.execute()
-
-    @staticmethod
-    def _empty_response(interval: str) -> Dict[str, Any]:
-        """
-        Returns a default empty structure when employee list is empty.
-        """
-        return {
-            "top_pros": [],
-            "total_worked_company": {
-                "total": 0,
-                "avg_per_timeframe": 0,
-                "per_timeframe": {},
-                "mode": interval
-            },
-            "top_ten_pro_history": {
-                "labels": [],
-                "datasets": []
-            },
-            "phase_distribution": [],
-            "pro_meta": {}
-        }
-
     def _apply_scope(self, query, start: date, end: date):
         """
-        Applies date range, team, and internal filters to the provided query.
+        Applies date range and optional internal project filters to the query.
         """
         q = query.filter(
             LogDailySummary.date >= start, 
             LogDailySummary.date <= end
         )
         
-        if self.emp_ids is not None:
-            q = q.filter(LogDailySummary.employee_id.in_(self.emp_ids))
-            
         if not self.include_internal:
             q = q.filter(
                 LogProjectHour.project_id.notlike("AA%"),
@@ -255,7 +183,7 @@ class GetDashboardGeneral:
 
     def execute(self) -> Dict[str, Any]:
         """
-        Orchestrates the retrieval and assembly of the full dashboard.
+        Orchestrates the retrieval and assembly of the general dashboard.
         """
         duration = (self.end_date - self.start_date).days + 1
         current_data = self._fetch_totals(self.start_date, self.end_date)
