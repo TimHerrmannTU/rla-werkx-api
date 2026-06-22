@@ -15,6 +15,40 @@ from src.modules.employee.schemas.general import EmployeeRead, EmployeeCreate, E
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
 ##################
+# VIEW ENDPOINTS #
+##################
+
+@router.get("/dashboard")
+def get_team_stats(
+    db: Session = Depends(get_db),
+    emp_ids: list[str] = Query(..., description="List of employee IDs for the team statistics"),
+    start_date: Optional[date] = Query(None, description="Start date of the timeframe (YYYY-MM-DD)"),
+    end_date: Optional[date] = Query(None, description="End date of the timeframe (YYYY-MM-DD)"),
+    interval: str = Query("month", pattern="^(month|week)$", description="Aggregation interval ('month' or 'week')")
+):
+    parsed_start, parsed_end = parse_dates(start_date, end_date, interval)
+    action = GetDashboardTeam(
+        db, 
+        emp_ids=emp_ids, 
+        start_date=parsed_start, 
+        end_date=parsed_end,
+        interval=interval
+    )
+    return action.execute()
+
+@router.get("/{emp_id}/detailed", response_model=EmployeeDetailedView)
+def get_employee_single_long(emp_id: str, db: Session = Depends(get_db)):
+    action = GetEmployeeDetailed(db)
+    emp = action.execute(emp_id=emp_id)
+    if not emp: raise HTTPException(404, "Employee not found")
+    return emp
+
+@router.get("/{emp_id}/dashboard")
+def get_employee(emp_id: str, db: Session = Depends(get_db)):
+    action = GetEmployeeDashboard(db)
+    return action.execute(emp_id=emp_id)
+
+##################
 # CRUD ENDPOINTS #
 ##################
 
@@ -46,36 +80,3 @@ def delete_employee(emp_id: str, db: Session = Depends(get_db)):
         raise HTTPException(404, "Employee not found")
     return None
 
-##################
-# VIEW ENDPOINTS #
-##################
-
-@router.get("/dashboard")
-def get_team_stats(
-    db: Session = Depends(get_db),
-    emp_ids: list[str] = Query(..., description="List of employee IDs for the team statistics"),
-    start_date: Optional[date] = Query(None, description="Start date of the timeframe (YYYY-MM-DD)"),
-    end_date: Optional[date] = Query(None, description="End date of the timeframe (YYYY-MM-DD)"),
-    interval: str = Query("month", pattern="^(month|week)$", description="Aggregation interval ('month' or 'week')")
-):
-    parsed_start, parsed_end = parse_dates(start_date, end_date, interval)
-    action = GetDashboardTeam(
-        db, 
-        emp_ids=emp_ids, 
-        start_date=parsed_start, 
-        end_date=parsed_end,
-        interval=interval
-    )
-    return None; # action.execute()
-
-@router.get("/{emp_id}/detailed", response_model=EmployeeDetailedView)
-def get_employee_single_long(emp_id: str, db: Session = Depends(get_db)):
-    action = GetEmployeeDetailed(db)
-    emp = action.execute(emp_id=emp_id)
-    if not emp: raise HTTPException(404, "Employee not found")
-    return emp
-
-@router.get("/{emp_id}/dashboard")
-def get_employee(emp_id: str, db: Session = Depends(get_db)):
-    action = GetEmployeeDashboard(db)
-    return action.execute(emp_id=emp_id)

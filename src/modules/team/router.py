@@ -9,6 +9,11 @@ from src.modules.team.crud import team_crud
 router = APIRouter(prefix="/teams", tags=["Teams"])
 
 ##################
+# VIEW ENDPOINTS #
+##################
+
+
+##################
 # CRUD ENDPOINTS #
 ##################
 
@@ -39,7 +44,3 @@ def delete_team(team_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="Team not found")
     return None
-
-##################
-# VIEW ENDPOINTS #
-##################
