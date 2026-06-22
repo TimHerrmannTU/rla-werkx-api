@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import get_db
 
-import services.dashboard as dashboard_service
+from services.dashboard import GetDashboardGeneral
 from services.project import GetProjectDashboard
 from services.employee import GetEmployeeDashboard 
 
@@ -29,7 +29,13 @@ def get_general(
     interval: str = Query("month", pattern="^(month|week)$", description="Aggregation interval ('month' or 'week')")
 ):
     parsed_start, parsed_end = _parse_dates(start_date, end_date, interval)
-    return dashboard_service.get_general(db, start_date=parsed_start, end_date=parsed_end, interval=interval)
+    action = GetDashboardGeneral(
+        db,
+        start_date=parsed_start,
+        end_date=parsed_end,
+        interval=interval
+    )
+    return action.execute()
 
 
 @router.get("/team")
@@ -41,13 +47,14 @@ def get_team_stats(
     interval: str = Query("month", pattern="^(month|week)$", description="Aggregation interval ('month' or 'week')")
 ):
     parsed_start, parsed_end = _parse_dates(start_date, end_date, interval)
-    return dashboard_service.get_team_stats(
+    action = GetDashboardGeneral(
         db, 
         emp_ids=emp_ids, 
         start_date=parsed_start, 
         end_date=parsed_end,
         interval=interval
     )
+    return action.execute()
 
 
 @router.get("/project/{project_id}", response_model=ProjectDashboardView)
