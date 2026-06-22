@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from src.modules.project.model import ProjectFlag
 from src.modules.project.schemas.flag import FlagCreate, FlagUpdate
-from ....core.base_crud import CRUDBase
+from src.core.base_crud import CRUDBase
 
 class CRUDProjectFlag(CRUDBase[ProjectFlag, FlagCreate, FlagUpdate]):
 

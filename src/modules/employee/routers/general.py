@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from src.core.database import get_db
 
 from src.modules.employee.crud.general import employee_crud
-import src.modules.employee.services.general as employee_service
 from src.modules.employee.services.general import GetEmployeeDetailed
 from src.modules.employee.schemas.general import EmployeeRead, EmployeeCreate, EmployeeUpdate, EmployeeDetailedView
 

@@ -5,7 +5,7 @@ from sqlalchemy import func
 from src.modules.project.model import Project
 from src.modules.log.model import LogProjectHour, LogDailySummary
 from src.modules.project.schemas.general import ProjectCreate, ProjectUpdate
-from ....core.base_crud import CRUDBase
+from src.core.base_crud import CRUDBase
 
 class CRUDProject(CRUDBase[Project, ProjectCreate, ProjectUpdate]):
 

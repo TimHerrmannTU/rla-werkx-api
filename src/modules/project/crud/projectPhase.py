@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from src.modules.project.model import ProjectPhase
 from src.modules.project.schemas.phase import PhaseCreate, PhaseUpdate
-from ....core.base_crud import CRUDBase
+from src.core.base_crud import CRUDBase
 
 class CRUDProjectPhase(CRUDBase[ProjectPhase, PhaseCreate, PhaseUpdate]):
     def get_by_project(self, db: Session, project_id: str):

@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.modules.employee import (
-    employee_general_router, 
-    employee_hour_target_router, 
-    employee_vacation_claim_router
-)
-from src.modules.project import (
-    project_general_router,
-    project_flag_router,
-    project_phase_router,
-)
+from src.modules.employee.routers.general import router as employee_general_router
+from src.modules.employee.routers.hourTarget import router as employee_hour_target_router
+from src.modules.employee.routers.vacationClaim import router as employee_vacation_claim_router
+
+from src.modules.project.routers.general import router as project_general_router
+from src.modules.project.routers.flag import router as project_flag_router
+from src.modules.project.routers.phase import router as project_phase_router
+
 from src.modules.team import Team
 from src.modules.location import Location
 

@@ -1,7 +1,7 @@
 from typing import Optional, Sequence
 from sqlalchemy.orm import Session, joinedload
 
-from ....core.base_crud import CRUDBase
+from src.core.base_crud import CRUDBase
 from src.modules.employee.model import Employee
 from src.modules.employee.schemas.general import EmployeeRead, EmployeeCreate, EmployeeUpdate
 

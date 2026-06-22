@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session, joinedload
 from typing import Sequence
 from datetime import date
 
+from src.core.base_crud import CRUDBase
 from src.modules.employee.model import EmployeeHourTarget
 from src.modules.employee.schemas.hourTarget import EmployeeHourTargetCreate, EmployeeHourTargetUpdate
-from ....core.base_crud import CRUDBase
 
 class CRUDEmployeeHourTarget(CRUDBase[EmployeeHourTarget, EmployeeHourTargetCreate, EmployeeHourTargetUpdate]):
     def get_for_month(db: Session, emp_id: str, year: int, month: int):
