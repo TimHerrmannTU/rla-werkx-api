@@ -195,9 +195,9 @@ class GetDashboardGeneral:
         sorted_pids, top_pros = self._get_top_projects(current_data, previous_data)
 
         return {
-            "top_pros": top_pros,
-            "total_worked_company": self._get_total_worked_company(),
-            "top_ten_pro_history": self._get_top_ten_history(sorted_pids),
-            "phase_distribution": self._get_phase_distribution(),
-            "pro_meta": self._get_project_metadata(sorted_pids)
+            "top_project_totals": top_pros,
+            "top_project_history": self._get_top_ten_history(sorted_pids),
+            "project_meta": self._get_project_metadata(sorted_pids),
+            "company_work_history": self._get_total_worked_company(),
+            "company_phase_shares": self._get_phase_distribution(),
         }
