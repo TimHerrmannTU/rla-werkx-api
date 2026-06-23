@@ -172,10 +172,13 @@ class GetDashboardTeam:
         targets_timeline = [round(weekly_target_totals.get(w, 0.0), 2) for w in week_keys]
         actuals_timeline = [round(weekly_actual_totals.get(w, 0.0), 2) for w in week_keys]
 
-        # 9. Format Pie Chart contribution mappings per project
+        # 9. Format Pie Chart contribution mappings and retrieve metadata
         project_contributions = {}
         db_project_colors = project_crud.get_colors(self.db, project_employee_hours.keys())
+        
+        # Build both metadata structures in a single pass to save processing time
         pro_colors = {p.id: p.color for p in db_project_colors}
+        pro_meta = {p.id: {"color": p.color, "name": p.name} for p in db_project_colors}
 
         for p_id, emp_hours in project_employee_hours.items():
             project_contributions[p_id] = {
@@ -205,7 +208,8 @@ class GetDashboardTeam:
                 "actuals": actuals_timeline    # Simple flat array of total team actual hours [380, 410, 430...]
             },
             "project_contributions": project_contributions, # Contribution breakdown per project (Pie Chart support)
-            "team_shares": team_shares                       # Overall workload share per employee (Pie Chart support)
+            "team_shares": team_shares,                     # Overall workload share per employee (Pie Chart support)
+            "pro_meta": pro_meta                            # Mapping of project IDs to color and name
         }
 
     def _get_target_from_contract(self, base_target_factor: float, day, contracts) -> float:
@@ -242,5 +246,6 @@ class GetDashboardTeam:
                 "actuals": []
             },
             "project_contributions": {},
-            "team_shares": {}
+            "team_shares": {},
+            "pro_meta": {}
         }
