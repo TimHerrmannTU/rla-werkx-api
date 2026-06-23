@@ -95,7 +95,15 @@ class GetDashboardTeam:
 
         logs_data = logs_query.all()
 
-        # 5. Process actual hours and contributions
+        # 5. Determine the top 10 projects by total workload in this timeframe
+        project_workloads = defaultdict(float)
+        for p_id, _, _, time in logs_data:
+            project_workloads[p_id] += float(time or 0.0)
+
+        sorted_projects = sorted(project_workloads.items(), key=lambda x: x[1], reverse=True)
+        top_10_project_ids = {p_id for p_id, _ in sorted_projects[:10]}
+
+        # 6. Process actual hours and contributions
         weekly_project_hours = defaultdict(lambda: defaultdict(float))
         project_employee_hours = defaultdict(lambda: defaultdict(float))
         employee_totals = defaultdict(float)
@@ -106,15 +114,20 @@ class GetDashboardTeam:
             hours = float(time or 0.0)
             week_key = day_to_week.get(d)
             
+            # Map tracking parameters
             if week_key:
-                weekly_project_hours[p_id][week_key] += hours
                 weekly_actual_totals[week_key] += hours
-                
-            project_employee_hours[p_id][emp_id] += hours
             employee_totals[emp_id] += hours
             grand_actual_total += hours
 
-        # 6. Fetch logged target hours from the DB
+            # Group any project outside the top 10 into "Andere" [1.1.2]
+            target_project_id = p_id if p_id in top_10_project_ids else "Andere"
+            
+            if week_key:
+                weekly_project_hours[target_project_id][week_key] += hours
+            project_employee_hours[target_project_id][emp_id] += hours
+
+        # 7. Fetch logged target hours from the DB
         summary_query = (
             self.db.query(
                 LogDailySummary.employee_id,
@@ -130,7 +143,7 @@ class GetDashboardTeam:
         )
         db_targets = {(emp_id, d): float(tgt or 0.0) for emp_id, d, tgt in summary_query}
 
-        # 7. Calculate targets ("how much should everybody have worked")
+        # 8. Calculate targets ("how much should everybody have worked")
         weekly_target_totals = defaultdict(float)
         grand_target_total = 0.0
 
@@ -160,9 +173,13 @@ class GetDashboardTeam:
                 weekly_target_totals[week_key] += tgt
                 grand_target_total += tgt
 
-        # 8. Clean, separated datasets for the Bar/Line charts
+        # 9. Clean, separated datasets for the Bar/Line charts
         project_datasets = []
         for p_id, week_data in weekly_project_hours.items():
+            # Exclude "Andere" from the timeline projects so that the frontend 
+            # continues to calculate "Andere" dynamically from 'actuals' and 'projects' [1.1.2]
+            if p_id == "Andere":
+                continue
             project_datasets.append({
                 "name": p_id,
                 "data": [round(week_data.get(w, 0.0), 2) for w in week_keys]
@@ -172,13 +189,20 @@ class GetDashboardTeam:
         targets_timeline = [round(weekly_target_totals.get(w, 0.0), 2) for w in week_keys]
         actuals_timeline = [round(weekly_actual_totals.get(w, 0.0), 2) for w in week_keys]
 
-        # 9. Format Pie Chart contribution mappings and retrieve metadata
+        # 10. Format Pie Chart contribution mappings and retrieve metadata
         project_contributions = {}
-        db_project_colors = project_crud.get_colors(self.db, project_employee_hours.keys())
         
-        # Build both metadata structures in a single pass to save processing time
+        # Exclude "Andere" from the metadata database search query
+        database_project_keys = [k for k in project_employee_hours.keys() if k != "Andere"]
+        db_project_colors = project_crud.get_colors(self.db, database_project_keys)
+        
+        # Build metadata structures
         pro_colors = {p.id: p.color for p in db_project_colors}
         pro_meta = {p.id: {"color": p.color, "name": p.name} for p in db_project_colors}
+
+        # Manually append the consolidated "Andere" virtual project metadata
+        pro_colors["Andere"] = "#D1D5DB"
+        pro_meta["Andere"] = {"color": "#D1D5DB", "name": "Andere"}
 
         for p_id, emp_hours in project_employee_hours.items():
             project_contributions[p_id] = {
@@ -203,11 +227,11 @@ class GetDashboardTeam:
             },
             "history": {
                 "labels": week_keys,
-                "projects": project_datasets, # Standard bar-chart datasets (just project hours)
-                "targets": targets_timeline,   # Simple flat array for the line-chart target line [400, 400, 420...]
-                "actuals": actuals_timeline    # Simple flat array of total team actual hours [380, 410, 430...]
+                "projects": project_datasets, # Exactly the top 10 projects
+                "targets": targets_timeline,   # Simple flat array for the line-chart target line
+                "actuals": actuals_timeline    # Simple flat array of total team actual hours
             },
-            "project_contributions": project_contributions, # Contribution breakdown per project (Pie Chart support)
+            "project_contributions": project_contributions, # Top 10 + "Andere" grouped (Pie/Sunburst Chart)
             "team_shares": team_shares,                     # Overall workload share per employee (Pie Chart support)
             "pro_meta": pro_meta                            # Mapping of project IDs to color and name
         }
