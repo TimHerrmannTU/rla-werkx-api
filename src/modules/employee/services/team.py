@@ -100,6 +100,7 @@ class GetDashboardTeam:
         for p_id, _, _, time in logs_data:
             project_workloads[p_id] += float(time or 0.0)
 
+        # Sorted in descending order
         sorted_projects = sorted(project_workloads.items(), key=lambda x: x[1], reverse=True)
         top_10_project_ids = {p_id for p_id, _ in sorted_projects[:10]}
 
@@ -120,7 +121,7 @@ class GetDashboardTeam:
             employee_totals[emp_id] += hours
             grand_actual_total += hours
 
-            # Group any project outside the top 10 into "Andere" [1.1.2]
+            # Group any project outside the top 10 into "Andere"
             target_project_id = p_id if p_id in top_10_project_ids else "Andere"
             
             if week_key:
@@ -175,15 +176,14 @@ class GetDashboardTeam:
 
         # 9. Clean, separated datasets for the Bar/Line charts
         project_datasets = []
-        for p_id, week_data in weekly_project_hours.items():
-            # Exclude "Andere" from the timeline projects so that the frontend 
-            # continues to calculate "Andere" dynamically from 'actuals' and 'projects' [1.1.2]
-            if p_id == "Andere":
-                continue
-            project_datasets.append({
-                "name": p_id,
-                "data": [round(week_data.get(w, 0.0), 2) for w in week_keys]
-            })
+        # Loop over the sorted projects first to guarantee sorting in descending order of total hours worked
+        for p_id, _ in sorted_projects[:10]:
+            if p_id in weekly_project_hours:
+                week_data = weekly_project_hours[p_id]
+                project_datasets.append({
+                    "name": p_id,
+                    "data": [round(week_data.get(w, 0.0), 2) for w in week_keys]
+                })
 
         # Flat lists mapped to the chronological week_keys
         targets_timeline = [round(weekly_target_totals.get(w, 0.0), 2) for w in week_keys]
@@ -191,12 +191,9 @@ class GetDashboardTeam:
 
         # 10. Format Pie Chart contribution mappings and retrieve metadata
         project_contributions = {}
+        db_project_colors = project_crud.get_colors(self.db, project_employee_hours.keys())
         
-        # Exclude "Andere" from the metadata database search query
-        database_project_keys = [k for k in project_employee_hours.keys() if k != "Andere"]
-        db_project_colors = project_crud.get_colors(self.db, database_project_keys)
-        
-        # Build metadata structures
+        # Build both metadata structures in a single pass to save processing time
         pro_colors = {p.id: p.color for p in db_project_colors}
         pro_meta = {p.id: {"color": p.color, "name": p.name} for p in db_project_colors}
 
@@ -225,14 +222,14 @@ class GetDashboardTeam:
                 "total_target": round(grand_target_total, 2),
                 "total_overtime": round(grand_actual_total - grand_target_total, 2)
             },
-            "team_shares": team_shares, # Overall workload share per employee (Pie Chart support)
             "project_history": {
                 "labels": week_keys,
-                "projects": project_datasets, # Exactly the top 10 projects
-                "targets": targets_timeline,   # Simple flat array for the line-chart target line
-                "actuals": actuals_timeline    # Simple flat array of total team actual hours
+                "projects": project_datasets, # Standard bar-chart datasets, strictly sorted descending
+                "targets": targets_timeline,   # Simple flat array for the line-chart target line [400, 400, 420...]
+                "actuals": actuals_timeline    # Simple flat array of total team actual hours [380, 410, 430...]
             },
-            "project_totals": project_contributions, # Top 10 + rest grouped (Pie/Sunburst Chart)
+            "project_totals": project_contributions, # Contribution breakdown per project (Pie/Sunburst Chart support)
+            "team_shares": team_shares,              # Overall workload share per employee (Pie Chart support)
             "project_meta": pro_meta                 # Mapping of project IDs to color and name
         }
 
