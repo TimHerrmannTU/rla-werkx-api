@@ -220,20 +220,20 @@ class GetDashboardTeam:
         }
 
         return {
-            "meta": {
+            "team_meta": {
                 "total_actual": round(grand_actual_total, 2),
                 "total_target": round(grand_target_total, 2),
                 "total_overtime": round(grand_actual_total - grand_target_total, 2)
             },
-            "history": {
+            "team_shares": team_shares, # Overall workload share per employee (Pie Chart support)
+            "project_history": {
                 "labels": week_keys,
                 "projects": project_datasets, # Exactly the top 10 projects
                 "targets": targets_timeline,   # Simple flat array for the line-chart target line
                 "actuals": actuals_timeline    # Simple flat array of total team actual hours
             },
-            "project_contributions": project_contributions, # Top 10 + "Andere" grouped (Pie/Sunburst Chart)
-            "team_shares": team_shares,                     # Overall workload share per employee (Pie Chart support)
-            "pro_meta": pro_meta                            # Mapping of project IDs to color and name
+            "project_totals": project_contributions, # Top 10 + rest grouped (Pie/Sunburst Chart)
+            "project_meta": pro_meta                 # Mapping of project IDs to color and name
         }
 
     def _get_target_from_contract(self, base_target_factor: float, day, contracts) -> float:
@@ -258,18 +258,18 @@ class GetDashboardTeam:
 
     def _empty_response(self) -> Dict[str, Any]:
         return {
-            "meta": {
+            "team_meta": {
                 "total_actual": 0.0,
                 "total_target": 0.0,
                 "total_overtime": 0.0
             },
-            "history": {
+            "team_shares": {},
+            "project_history": {
                 "labels": [],
                 "projects": [],
                 "targets": [],
                 "actuals": []
             },
-            "project_contributions": {},
-            "team_shares": {},
-            "pro_meta": {}
+            "project_totals": {},
+            "project_meta": {}
         }
