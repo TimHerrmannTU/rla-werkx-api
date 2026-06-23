@@ -9,6 +9,8 @@ from src.modules.project.routers.general import router as project_general_router
 from src.modules.project.routers.flag import router as project_flag_router
 from src.modules.project.routers.phase import router as project_phase_router
 
+from src.modules.analytics.router import router as analytics_router
+
 from src.modules.team import Team
 from src.modules.location import Location
 
@@ -29,3 +31,5 @@ app.include_router(project_phase_router)
 app.include_router(employee_general_router)
 app.include_router(employee_hour_target_router)
 app.include_router(employee_vacation_claim_router)
+
+app.include_router(analytics_router)

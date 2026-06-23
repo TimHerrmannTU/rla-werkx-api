@@ -9,7 +9,7 @@ from src.core.database import get_db
 
 from src.modules.analytics.service import GetDashboardGeneral
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 @router.get("/")
 def get_general(
