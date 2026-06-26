@@ -14,6 +14,7 @@ class Employee(Base):
     birthday = Column(Date)
     entry_date = Column(Date)
     exit_date = Column(Date, nullable=True)
+    
     first_work_year = Column(Integer)
     start_tracking_date = Column(Date)
     active = Column(Boolean, default=True)

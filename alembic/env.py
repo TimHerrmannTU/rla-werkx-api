@@ -13,7 +13,12 @@ from src.core.config import get_settings
 # Add project root to python path to resolve 'database' and 'models'
 sys.path.append(os.getcwd())
 
-import src.models as models
+from src.modules.employee.model import Employee
+from src.modules.project.model import Project, ProjectPhase, ProjectFlag
+from src.modules.log.model import LogDailySummary, LogProjectHour
+from src.modules.team.model import Team
+from src.modules.location.model import Location
+from src.modules.calender.model import CalendarDay, Holiday
 
 # Alembic Config object
 config = context.config
