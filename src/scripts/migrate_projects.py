@@ -3,8 +3,6 @@ import os
 from tqdm import tqdm
 import unicodedata
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from src.core.database import get_legacy_connection, get_target_session, engine, Base
 
 from src.modules.project.model import Project, ProjectPhase, ProjectPartial, ProjectService, ProjectFlag

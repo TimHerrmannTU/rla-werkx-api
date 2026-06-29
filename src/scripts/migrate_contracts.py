@@ -2,8 +2,6 @@ import sys
 import os
 from tqdm import tqdm
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from src.core.database import get_legacy_connection, get_target_session, engine, Base
 
 from src.modules.employee.model import Employee, EmployeeHourTarget, EmployeeVacationClaim

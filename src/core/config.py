@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     OLD_DB_NAME: str
         
-    def DATABASE_URL(self, fetch_from_legacy_table = False) -> str:
+    def get_database_url(self, fetch_from_legacy_table = False) -> str:
         table = self.OLD_DB_NAME if fetch_from_legacy_table else self.DB_NAME
         return f"mysql+mysqlconnector://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}/{table}"
 

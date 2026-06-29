@@ -17,19 +17,16 @@ SCRIPTS = [
 ]
 
 def run():
-    base_path = os.path.dirname(os.path.abspath(__file__))
-    
     print("🚀 Starting Full Migration Sequence...")
     
     for script_name in SCRIPTS:
-        script_path = os.path.join(base_path, script_name)
-        print(f"\n▶️ Running: {script_name}")
+        module_name = f"src.scripts.{script_name.replace('.py', '')}"
+        print(f"\n▶️ Running: {module_name}")
         
-        # Execute script as a separate process
-        result = subprocess.run([sys.executable, script_path])
+        result = subprocess.run([sys.executable, "-m", module_name])
         
         if result.returncode != 0:
-            print(f"❌ Failed at {script_name}. Aborting.")
+            print(f"❌ Failed at {module_name}. Aborting.")
             sys.exit(result.returncode)
             
     print("\n✅ All migrations completed successfully.")
