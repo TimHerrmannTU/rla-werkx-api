@@ -2,12 +2,13 @@ import sys
 import os
 
 from src.core.database import get_legacy_connection, get_target_session, engine, Base
-from src.modules.employee.model import Employee
-from src.modules.location.model import Location
+
+from src.models import Employee, Location
+
 from datetime import datetime
 from tqdm import tqdm
 
-from utils import parse_legacy_date
+from src.scripts.utils import parse_legacy_date
 
 def run():
     print("--- Migrating Employees ---")

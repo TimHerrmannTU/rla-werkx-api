@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from src.core.database import get_target_session, engine, Base
 
-from src.modules.calender.model import CalendarDay
+from src.models import CalendarDay
 
 def run():
     print("--- Seeding Calendar Days (2000-2049) ---")

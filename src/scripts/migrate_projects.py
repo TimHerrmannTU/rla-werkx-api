@@ -5,9 +5,9 @@ import unicodedata
 
 from src.core.database import get_legacy_connection, get_target_session, engine, Base
 
-from src.modules.project.model import Project, ProjectPhase, ProjectPartial, ProjectService, ProjectFlag
+from src.models import Project, ProjectPhase, ProjectPartial, ProjectService, ProjectFlag
 
-from src.core.utils.date_helper import parse_legacy_date
+from src.scripts.utils import parse_legacy_date
 
 def clean_str(val):
     if isinstance(val, str):

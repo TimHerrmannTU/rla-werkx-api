@@ -6,9 +6,7 @@ from sqlalchemy.orm import joinedload
 
 from src.core.database import get_target_session, engine, Base
 
-from src.modules.log.model import LogDailySummary
-from src.modules.employee.model import Employee, EmployeeHourTarget
-from src.modules.calender.model import CalendarDay, Holiday
+from src.models import LogDailySummary, Employee, EmployeeHourTarget, CalendarDay, Holiday
 
 def run():
     print("--- Calculating Target Hours (History) ---")

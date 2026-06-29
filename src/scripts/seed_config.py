@@ -3,7 +3,7 @@ import os
 
 from src.core.database import get_target_session, engine, Base
 
-from src.modules.employee.model import VacationRule # Assumed under employee/model.py
+from src.models import VacationRule
 
 RULES = [
     {"min": 0,  "max": 4,   "days": 24.0},

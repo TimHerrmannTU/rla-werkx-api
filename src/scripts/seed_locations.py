@@ -3,7 +3,7 @@ import os
 
 from src.core.database import get_target_session, engine, Base
 
-from src.modules.location.model import Location
+from src.models import Location
 
 LOCATIONS = ["Dresden", "Berlin", "Prag"]
 

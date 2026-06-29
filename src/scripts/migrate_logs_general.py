@@ -4,10 +4,9 @@ from tqdm import tqdm
 
 from src.core.database import get_legacy_connection, get_target_session, engine, Base
 
-from src.modules.log.model import LogDailySummary
-from src.modules.employee.model import Employee
+from src.models import LogDailySummary, Employee
 
-from src.core.utils.date_helper import parse_legacy_date
+from src.scripts.utils import parse_legacy_date
 
 def run():
     print("--- Migration Part 1: The Daily Backbone ---")

@@ -5,10 +5,9 @@ from tqdm import tqdm
 
 from src.core.database import get_legacy_connection, get_target_session, engine, Base
 
-from src.modules.calender.model import Holiday
-from src.modules.location.model import Location
+from src.models import Holiday, Location
 
-from src.core.utils.date_helper import parse_legacy_date
+from src.scripts.utils import parse_legacy_date
 
 def run():
     print("--- Migrating Holidays ---")
@@ -43,7 +42,7 @@ def run():
         holiday = Holiday(
             date=date_val,
             name=row[1],
-            region="DD" if row[2] == "N" else row[2],
+            # region="DD" if row[2] == "N" else row[2],
             target_factor=row[3] if row[3] is not None else 0.0,
             is_company_holiday=False,
             location_id=dresden_id
@@ -57,7 +56,7 @@ def run():
         holiday = Holiday(
             date=date_val,
             name=row[1],
-            region="DD",
+            # region="DD",
             target_factor=row[2] if row[2] is not None else 0.0,
             is_company_holiday=True,
             location_id=dresden_id            
