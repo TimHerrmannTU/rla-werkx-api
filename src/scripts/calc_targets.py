@@ -6,11 +6,11 @@ from sqlalchemy.orm import joinedload
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.db_target import get_target_session, engine
-from src.models import (
-    Base, LogDailySummary, Employee, EmployeeHourTarget, 
-    CalendarDay, Holiday
-)
+from src.core.database import get_target_session, engine, Base
+
+from src.modules.log.model import LogDailySummary
+from src.modules.employee.model import Employee, EmployeeHourTarget
+from src.modules.calender.model import CalendarDay, Holiday
 
 def run():
     print("--- Calculating Target Hours (History) ---")

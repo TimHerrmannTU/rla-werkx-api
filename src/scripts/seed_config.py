@@ -1,9 +1,11 @@
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.db_target import get_target_session, engine
-from src.models import Base, VacationRule
+from src.core.database import get_target_session, engine, Base
+
+from src.modules.employee.model import VacationRule # Assumed under employee/model.py
 
 RULES = [
     {"min": 0,  "max": 4,   "days": 24.0},

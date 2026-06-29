@@ -1,9 +1,11 @@
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.db_target import get_target_session, engine
-from src.models import Base, Location
+from src.core.database import get_target_session, engine, Base
+
+from src.modules.location.model import Location
 
 LOCATIONS = ["Dresden", "Berlin", "Prag"]
 

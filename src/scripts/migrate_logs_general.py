@@ -4,10 +4,12 @@ from tqdm import tqdm
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.db_source import get_legacy_connection
-from src.db_target import get_target_session, engine
-from src.models import Base, LogDailySummary, Employee
-from src.utils import parse_legacy_date
+from src.core.database import get_legacy_connection, get_target_session, engine, Base
+
+from src.modules.log.model import LogDailySummary
+from src.modules.employee.model import Employee
+
+from src.core.utils.date_helper import parse_legacy_date
 
 def run():
     print("--- Migration Part 1: The Daily Backbone ---")

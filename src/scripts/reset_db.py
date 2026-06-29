@@ -4,7 +4,7 @@ from sqlalchemy import text, inspect
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.db_target import engine
+from src.core.database import engine
 
 def run():
     print("☢️ DB NUKE STARTED...")

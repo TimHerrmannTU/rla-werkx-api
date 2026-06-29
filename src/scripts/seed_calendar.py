@@ -1,11 +1,13 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.db_target import get_target_session, engine
-from src.models import Base, CalendarDay
 from datetime import date, timedelta
 from tqdm import tqdm
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.core.database import get_target_session, engine, Base
+
+from src.modules.calender.model import CalendarDay
 
 def run():
     print("--- Seeding Calendar Days (2000-2049) ---")
