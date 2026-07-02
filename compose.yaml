@@ -1,6 +1,8 @@
 services:
   server:
     build: .
+    container_name: rla_werkx_api
+    restart: always
     env_file:
       - .env
     environment:
